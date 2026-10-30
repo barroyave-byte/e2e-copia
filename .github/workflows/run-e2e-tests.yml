@@ -1,0 +1,124 @@
+name: Run i-hub E2E tests
+
+# Dispatched only by integration-hub (POST /e2e/runs). run-name MUST equal run_id:
+# the hub finds the GitHub run by that title.
+run-name: ${{ inputs.run_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "i-hub run id"
+        required: true
+        type: string
+      test_ids:
+        description: "Comma-separated Zephyr ids, e.g. PF-T127,PI-T1911"
+        required: true
+        type: string
+      environment:
+        description: "development | staging | sandbox | production"
+        required: true
+        type: string
+      credentials_url:
+        description: "One-shot endpoint that returns the run credentials"
+        required: true
+        type: string
+      run_token:
+        description: "Per-run token for credentials_url and callback_url"
+        required: true
+        type: string
+      callback_url:
+        description: "Optional: URL that receives the run summary when it ends"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ihub-e2e-${{ inputs.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # Inputs go through env, never interpolated into shell code.
+      TEST_IDS: ${{ inputs.test_ids }}
+      IHUB_ENVIRONMENT: ${{ inputs.environment }}
+      CREDENTIALS_URL: ${{ inputs.credentials_url }}
+      CALLBACK_URL: ${{ inputs.callback_url }}
+      RUN_TOKEN: ${{ inputs.run_token }}
+      RUN_ID: ${{ inputs.run_id }}
+    steps:
+      - name: Mask run token
+        run: echo "::add-mask::${RUN_TOKEN}"
+
+      - name: Validate inputs
+        run: |
+          [[ "$TEST_IDS" =~ ^[A-Za-z0-9_-]+(,[A-Za-z0-9_-]+)*$ ]] || { echo "invalid test_ids"; exit 1; }
+          [[ "$IHUB_ENVIRONMENT" =~ ^(development|staging|sandbox|production)$ ]] || { echo "invalid environment"; exit 1; }
+          [[ "$CREDENTIALS_URL" =~ ^https:// ]] || { echo "credentials_url must be https"; exit 1; }
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Fetch run credentials (single use)
+        run: |
+          file="${RUNNER_TEMP}/ihub-credentials.json"
+          umask 077
+          code=$(curl -sS -o "$file" -w '%{http_code}' -H "X-Run-Token: ${RUN_TOKEN}" "$CREDENTIALS_URL")
+          [ "$code" = "200" ] || { echo "credentials fetch failed (HTTP $code)"; rm -f "$file"; exit 1; }
+          # Mask every credential value so it never shows up in logs.
+          jq -r '.credentials[]? | .[]?' "$file" | while IFS= read -r v; do [ -n "$v" ] && echo "::add-mask::$v"; done
+          echo "IHUB_CREDENTIALS_FILE=$file" >> "$GITHUB_ENV"
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        env:
+          CI: "true"
+        run: |
+          # Zephyr ids are tags (@PF-T127): match any of the requested ones.
+          grep_re="@($(echo "$TEST_IDS" | tr ',' '|'))\$"
+          npx playwright test --project=chromium --grep "$grep_re" --reporter=list,json
+        # NOTE: how the suite picks the target environment (NODE_ENV / base URLs) is still to be
+        # confirmed against playwright.config.ts; IHUB_ENVIRONMENT is exported for credentials.ts.
+
+      - name: Delete credentials
+        if: always()
+        run: rm -f "${IHUB_CREDENTIALS_FILE:-/dev/null}"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ihub-e2e-${{ inputs.run_id }}
+          path: playwright-report
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Send summary (optional)
+        if: always() && env.CALLBACK_URL != ''
+        run: |
+          jq -n --arg run_id "$RUN_ID" --arg outcome "${{ steps.tests.outcome }}" \
+            --arg github_run "${{ github.run_id }}" \
+            '{run_id:$run_id, outcome:$outcome, github_run_id:$github_run}' \
+          | curl -sS -X POST -H "Content-Type: application/json" -H "X-Run-Token: ${RUN_TOKEN}" \
+              --data @- "$CALLBACK_URL" || echo "callback failed (ignored)"
+
+      - name: Fail the run if tests failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1
