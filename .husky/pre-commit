@@ -1,0 +1,16 @@
+# 1) Formateo automático de los archivos staged (lint-staged los re-agrega al índice).
+#    Durante un merge se omite el stash de respaldo: git stash falla con las rutas
+#    que ahora pasan por un symlink (los renombres .claude/skills -> .agents/skills),
+#    y eso aborta el commit del merge antes de formatear nada.
+if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ]; then
+  npx --no-install lint-staged --no-stash
+else
+  npx --no-install lint-staged
+fi
+
+# 2) Gate estricto de tipos. Aborta el commit ante cualquier error de tipado/sintaxis.
+node scripts/precommit-typecheck.js
+
+# 3) package-lock.json solo se escribe con el npm de "engines" (npm 11): otro major lo reescribe
+#    con cambios ajenos al PR.
+node scripts/check-npm-version.js

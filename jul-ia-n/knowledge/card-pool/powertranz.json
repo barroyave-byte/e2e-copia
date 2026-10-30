@@ -1,0 +1,17 @@
+{
+  "psp": "powertranz",
+  "cards": [
+    {
+      "variableName": "powertranzVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "powertranzMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    }
+  ]
+}

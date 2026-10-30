@@ -1,0 +1,512 @@
+{
+  "jnovoadeuna": {
+    "email": "jnovoa@deuna.com",
+    "user_id_jira": "63e704e786a66a7cc7ab6e34",
+    "fullname": "Julian Alexis Novoa Lujan"
+  },
+  "ronzalo": {
+    "email": "gmoreno@deuna.com",
+    "user_id_jira": "5f765f89459d4200696d80fd",
+    "fullname": "Gonzalo Moreno"
+  },
+  "rogelio-meza-t": {
+    "email": "rmeza@deuna.com",
+    "user_id_jira": "6165db5a99b4b8006a1a18a6",
+    "fullname": "Rogelio Meza"
+  },
+  "catalanseb": {
+    "email": "scatalan@deuna.com",
+    "user_id_jira": "61362d1da4f86e00693b5db8",
+    "fullname": "Sebastian Catalan"
+  },
+  "pabloamg": {
+    "email": "pmurillo@deuna.com",
+    "user_id_jira": "5f765f8c95fe8e0069624b4f",
+    "fullname": "Pablo Murillo"
+  },
+  "JeanRoldanDev": {
+    "email": "jroldan@deuna.com",
+    "user_id_jira": "61466fa1850dd00069df551d",
+    "fullname": "Jean Roldan"
+  },
+  "masterkeysrd": {
+    "email": "dmorales@deuna.com",
+    "user_id_jira": "712020:40b18189-d8ff-4745-87b3-284e8c832b2a",
+    "fullname": "David Morales"
+  },
+  "frontalinilucas": {
+    "email": "lfrontalini@deuna.com",
+    "user_id_jira": "62fec49a2e3849d1377815b8",
+    "fullname": "Lucas Frontalini"
+  },
+  "zetogk": {
+    "email": "syepestamayo@deuna.com",
+    "user_id_jira": "626d4f1a52310b006802d1a7",
+    "fullname": "Santiago Yepes"
+  },
+  "capdilla": {
+    "email": "cpadilla@deuna.com",
+    "user_id_jira": "5f9f59d7c2e5390077a92a6b",
+    "fullname": "Carlos Padilla"
+  },
+  "Krysthyan": {
+    "email": "cbhernandez@deuna.com",
+    "user_id_jira": "712020:111fa852-39ab-4a8c-b0af-f97765d8e99c",
+    "fullname": "Cristhian Bladimir Hernández Becerra"
+  },
+  "aledeltoro": {
+    "email": "aencarnacion@deuna.com",
+    "user_id_jira": "712020:86bf3aa6-f91c-4c33-939f-b3e5a455bfdb",
+    "fullname": "Alejandro Encarnación"
+  },
+  "jcmexdev": {
+    "email": "jcgarcia@deuna.com",
+    "user_id_jira": "712020:877c5518-4310-4536-845f-47bb5938a1eb",
+    "fullname": "Juan Carlos Garcia Esquivel"
+  },
+  "EslavaDev": {
+    "email": "deslava@deuna.com",
+    "user_id_jira": "712020:4e65f3ce-15e0-43d6-84ef-f0cdbdba7edd",
+    "fullname": "Daniel Alejandro Eslava"
+  },
+  "syned13": {
+    "email": "drosario@deuna.com",
+    "user_id_jira": "6414b8c9b05b4e3e7da9b57f",
+    "fullname": "Denys Rosario"
+  },
+  "JoelD7": {
+    "email": "jfabian@deuna.com",
+    "user_id_jira": "712020:b6887106-a262-4be1-9795-ce285d903263",
+    "fullname": "Joel David Fabian Ramirez"
+  },
+  "asmejia1993": {
+    "email": "amejia@deuna.com",
+    "user_id_jira": "712020:3bbc1fca-e9df-4d6a-b7ad-11ba5d4db6e2",
+    "fullname": "Andy Samuel Mejia Acosta"
+  },
+  "diegoalejandro1094": {
+    "email": "dlora@deuna.com",
+    "user_id_jira": "617c0c9d860f78006b61d38b",
+    "fullname": "Diego Lora"
+  },
+  "ortegasixto7": {
+    "email": "sortega@deuna.com",
+    "user_id_jira": "712020:bf5292d3-d30b-4cab-8d24-83b848e829ee",
+    "fullname": "Sixto Miguel Ortega"
+  },
+  "mig-elgt": {
+    "email": "mgalicia@deuna.com",
+    "user_id_jira": "712020:e14503d3-c4b9-4f75-bd90-d21112b9e281",
+    "fullname": "Miguel Ángel Galicia Torrez"
+  },
+  "nmlosada": {
+    "email": "nlosada@deuna.com",
+    "user_id_jira": "62f6a35b48e310e67298970f",
+    "fullname": "Nahuel Losada"
+  },
+  "lpereira-deuna": {
+    "email": "lpereira@deuna.com",
+    "user_id_jira": "63fd6e490d9b61193c242a62",
+    "fullname": "Leonardo Francisco Pereira de Macedo"
+  },
+  "ffalconesmera": {
+    "email": "fmfalcones@deuna.com",
+    "user_id_jira": "712020:25bc46bf-7887-41d8-a6cd-bf32fa3758b2",
+    "fullname": "Fabian Mikael Falcones Mera"
+  },
+  "jkrucheski": {
+    "email": "jkrucheski@deuna.com",
+    "user_id_jira": "712020:e3eb7979-939c-467c-87fb-9d1f49d98288",
+    "fullname": "Jonathan David Krucheski"
+  },
+  "HexerMelvin117": {
+    "email": "mrosales@deuna.com",
+    "user_id_jira": "5fbc346f78f01800761b8586",
+    "fullname": "Melvin Rosales"
+  },
+  "r2rendon": {
+    "email": "arendon@deuna.com",
+    "user_id_jira": "712020:4afdb4c6-e054-415e-9825-4950ddd88835",
+    "fullname": "Arturo Rendón"
+  },
+  "DinaRocio": {
+    "email": "drocio@deuna.com",
+    "user_id_jira": "608b0261ccda29006b989ef8",
+    "fullname": "Dina Rocio"
+  },
+  "devedux": {
+    "email": "claurente@deuna.com",
+    "user_id_jira": "61bd4ed9817d530069b95663",
+    "fullname": "Cristhian Laurente"
+  },
+  "hugoff-d1": {
+    "email": "hflotts@deuna.com",
+    "user_id_jira": "712020:f435a3bd-7d23-488d-b840-4b9a6d0c3435",
+    "fullname": "Hugo Flotts"
+  },
+  "AustinLinares": {
+    "email": "alinares@deuna.com",
+    "user_id_jira": "62a0f1d8d442e60068423d2f",
+    "fullname": "Austin Linares"
+  },
+  "danielh27": {
+    "email": "dherrera@deuna.com",
+    "user_id_jira": "62a0f1d8d442e60068423d2f",
+    "fullname": "Daniel Herrera"
+  },
+  "abrahamnj": {
+    "email": "anavarrete@deuna.com",
+    "user_id_jira": "712020:214e5cf0-349b-4224-b0e3-8832e2003fc3",
+    "fullname": "Abraham Navarrete"
+  },
+  "acastiblanco10": {
+    "email": "acastiblanco@deuna.com",
+    "user_id_jira": "712020:3938f531-9218-46d7-b746-d04c35beddc5",
+    "fullname": "Alejandro Castiblanco"
+  },
+  "aecheverridev": {
+    "email": "aecheverri@deuna.com",
+    "user_id_jira": "712020:28a0de27-0af6-46d1-a7fc-26dacbfe4d00",
+    "fullname": "Alexander Jimenez Echeverri"
+  },
+  "Ale-Orozco-ops": {
+    "email": "azavala@deuna.com",
+    "user_id_jira": "712020:1d4fbdec-e607-41b5-a79b-75fcdf9fa00e",
+    "fullname": "Alejandra Orozco Zavala"
+  },
+  "alexanderjoffre": {
+    "email": "ajoffre@deuna.com",
+    "user_id_jira": "712020:0526a505-199f-4b49-b168-ec9fb2c7f858",
+    "fullname": "Alexander Joffre"
+  },
+  "barroyave-byte": {
+    "email": "barroyave@deuna.com",
+    "user_id_jira": "712020:b4e03f33-1978-4619-a519-9ec8eb153a0d",
+    "fullname": "Bryan Arroyave"
+  },
+  "bromanc": {
+    "email": "broman@deuna.com",
+    "user_id_jira": "712020:1179b6af-eb17-4b85-932c-7dbe83625f71",
+    "fullname": "Bolívar Román"
+  },
+  "cj203": {
+    "email": "cjrodriguez@deuna.com",
+    "user_id_jira": "712020:9cbaa9c1-699a-494c-8e3b-a1d62cf34bd9",
+    "fullname": "Carlos Rodríguez"
+  },
+  "CLu1s": {
+    "email": "jllopez@deuna.com",
+    "user_id_jira": "712020:9f003eff-d7ce-4b54-887a-b5c12c6721e1",
+    "fullname": "Luis Lopez"
+  },
+  "dabeltran-deuna": {
+    "email": "abeltran@deuna.com",
+    "user_id_jira": "712020:ef93c9f0-00ce-4444-9b94-5fb6da7fa736",
+    "fullname": "Diego Beltrán"
+  },
+  "darwinmorocho-deuna": {
+    "email": "dmorocho@deuna.com",
+    "user_id_jira": "712020:5794c75a-5f46-4d0a-bbcb-0dd87c832453",
+    "fullname": "Darwin Morocho - Deuna"
+  },
+  "davilapa": {
+    "email": "davila@deuna.com",
+    "user_id_jira": "712020:ec5f62e0-0e04-43b8-9396-a0ba6a843233",
+    "fullname": "Diego Avila"
+  },
+  "ddgr": {
+    "email": "ddgonzalez@deuna.com",
+    "user_id_jira": "712020:24df4654-2427-42ad-bb0f-ab8ef9cc2999",
+    "fullname": "Daniel González"
+  },
+  "dokshor": {
+    "email": "framirez@deuna.com",
+    "user_id_jira": "712020:e7bfc3bf-53b4-447d-9f4d-7e2f40fc0c10",
+    "fullname": "Fabian Ramirez"
+  },
+  "duartegaston": {
+    "email": "gduarte@deuna.com",
+    "user_id_jira": "712020:366b37d8-2fd0-43b0-a080-d945b3491569",
+    "fullname": "Gaston Duarte"
+  },
+  "duna-alex-vidal": {
+    "email": "avidal@deuna.com",
+    "user_id_jira": "712020:e05dc588-bb29-4b15-8186-42d4a42d7744",
+    "fullname": "Alex Vidal"
+  },
+  "edgarSucre": {
+    "email": "esucre@deuna.com",
+    "user_id_jira": "712020:22cac154-2535-4472-b002-5f0a424e3aa1",
+    "fullname": "Edgar Sucre"
+  },
+  "erodriguez1025": {
+    "email": "egomez@deuna.com",
+    "user_id_jira": "712020:c0e0d50f-5c7c-447a-a0cf-2b62a23d86e0",
+    "fullname": "Erick Rodriguez"
+  },
+  "einche-deuna": {
+    "email": "ejinche@deuna.com",
+    "user_id_jira": "712020:a568cd54-ed92-4c84-a0db-f1b48286a761",
+    "fullname": "Elvis Inche"
+  },
+  "ejimenezlopz": {
+    "email": "ejimenez@deuna.com",
+    "user_id_jira": "63225d1ecf721d09b0168b99",
+    "fullname": "Enrique López "
+  },
+  "eliasexequieldefilippi": {
+    "email": "edefilippi@deuna.com",
+    "user_id_jira": "712020:907f06fd-60a7-40da-9516-b7c649e9ddba",
+    "fullname": "Elias Defilippi"
+  },
+  "esteban-deuna": {
+    "email": "eposada@deuna.com",
+    "user_id_jira": "640b7e487c30bbd6b342be39",
+    "fullname": "Esteban Posada"
+  },
+  "fcr-deuna": {
+    "email": "fcisneros@deuna.com",
+    "user_id_jira": "712020:426a6d79-9d4d-4f2b-95d0-8e17b837d37c",
+    "fullname": "Fernando Cisneros "
+  },
+  "fideliocc": {
+    "email": "ejcalle@deuna.com",
+    "user_id_jira": "712020:fabb1cd2-52dc-4c9b-b664-413908d4a80a",
+    "fullname": "Erick Calle Castillo"
+  },
+  "francomidence": {
+    "email": "ffmidence@deuna.com",
+    "user_id_jira": "712020:30dd7a2c-fc7a-4086-b404-432336077a55",
+    "fullname": "Franco Midence"
+  },
+  "FranDEUNA": {
+    "email": "fgutierrez@deuna.com",
+    "user_id_jira": "62d5e61c4f6f10b07280b5f5",
+    "fullname": "Francisco Gutierrez"
+  },
+  "gustusmorten": {
+    "email": "jcamacho@deuna.com",
+    "user_id_jira": "712020:bdffac34-2b67-4c21-8771-0222e1bc8b1f",
+    "fullname": "Jose Luis Camacho Torres"
+  },
+  "henryf3": {
+    "email": "hcaraguay@getduna.com",
+    "user_id_jira": "5ffdf1d83b5e470138324c03",
+    "fullname": "Henry Caraguay Ordoñez"
+  },
+  "herson20": {
+    "email": "hrurbina@deuna.com",
+    "user_id_jira": "712020:9d4a3fe2-a3cd-4ebd-b757-2628b9d0766e",
+    "fullname": "Herson Urbina C."
+  },
+  "hummusim": {
+    "email": "pdiaz@deuna.com",
+    "user_id_jira": "601e066c47a95400695f5c9b",
+    "fullname": "Pablo Díaz"
+  },
+  "husainp5253": {
+    "email": "hpatel@deuna.com",
+    "user_id_jira": "712020:bdc6e8b0-40bd-4e7a-8c75-df45e5c2b615",
+    "fullname": "Husain Pate"
+  },
+  "iamsiri007": {
+    "email": "sgaja@deuna.com",
+    "user_id_jira": "712020:eb425140-2f1d-4b7b-a449-4959faf32a88",
+    "fullname": "Sridhar Gaja Parthasarathy"
+  },
+  "igerardo": {
+    "email": "igerardo@deuna.com",
+    "user_id_jira": "6344a41d7d10ef7914922fee",
+    "fullname": "Israel Gerardo"
+  },
+  "iveJuarez": {
+    "email": "ijuarez@deuna.com",
+    "user_id_jira": "630e96a04fbe9c4bd0eda6ec",
+    "fullname": "Ivette Juárez"
+  },
+  "jamedinahn": {
+    "email": "jamedina@deuna.com",
+    "user_id_jira": "712020:8cb2460f-7f8f-407c-bd3d-4ce8e6af3b10",
+    "fullname": "Javier Medina"
+  },
+  "JChuctaya": {
+    "email": "jherbert@deuna.com",
+    "user_id_jira": "60c2d1d7deecef006a04324a",
+    "fullname": "Juan Herbert Chuctaya Humari"
+  },
+  "JGPAREDES": {
+    "email": "jparedes@deuna.com",
+    "user_id_jira": "6233bda073c8ec00699e04be",
+    "fullname": "Jonattan Paredes"
+  },
+  "jheredia-deuna": {
+    "email": "jheredia@deuna.com",
+    "user_id_jira": "712020:49f9e4b6-3422-45d4-92fb-86ae210c55f4",
+    "fullname": "Joaquin Heredia"
+  },
+  "jneto-deuna": {
+    "email": "jneto@deuna.com",
+    "user_id_jira": "712020:a18feb39-c063-4a25-907a-6f3af46ac27c",
+    "fullname": "José L. de Godoi Neto"
+  },
+  "jore-d1": {
+    "email": "jcastro@deuna.com",
+    "user_id_jira": "712020:2ef1392c-df4b-4964-b521-ebaa7f34f0e7",
+    "fullname": "Jorge Salazar"
+  },
+  "jsabogaldeuna": {
+    "email": "jsabogal@deuna.com",
+    "user_id_jira": "712020:15ef5f40-828c-41c9-a3bd-a724a49ed4d9",
+    "fullname": "Jose Sabogal"
+  },
+  "juanmartinezq": {
+    "email": "jmartinez@deuna.com",
+    "user_id_jira": "633380a0234d44d406d25784",
+    "fullname": "Juan Martínez"
+  },
+  "juanse1801": {
+    "email": "jsalazar@deuna.com",
+    "user_id_jira": "712020:950ab367-0db5-4962-8f9d-cb0bdefb94fc",
+    "fullname": "Juan Sebastian Salazar"
+  },
+  "krojas-deuna": {
+    "email": "krojas@deuna.com",
+    "user_id_jira": "712020:a5cd1bab-c797-4459-97fa-009dbe4bed86",
+    "fullname": "Kevin Alfredo Rojas Gutierrez"
+  },
+  "lagonzalez": {
+    "email": "mlgonzalez@deuna.com",
+    "user_id_jira": "712020:e26fa66a-5e7d-4172-b28a-d794a2164469",
+    "fullname": "Laura González"
+  },
+  "Lisba": {
+    "email": "lojeda@deuna.com",
+    "user_id_jira": "712020:350dfedd-0323-4dcc-8bc3-ac8073adf4a4",
+    "fullname": "Lisbaldy de Jesús"
+  },
+  "mcalle28": {
+    "email": "mcalle@deuna.com",
+    "user_id_jira": "712020:cb1bd804-0508-437d-8acb-ccc8d546bdb5",
+    "fullname": "Maria Calle"
+  },
+  "n0npoint": {
+    "email": "eisaula@deuna.com",
+    "user_id_jira": "712020:a6730fdc-6194-41ef-9012-cc266e0bed13",
+    "fullname": "Edgardo Isaula"
+  },
+  "naftandev": {
+    "email": "jpacheco@deuna.com",
+    "user_id_jira": "712020:7eb47b39-494d-4b7a-bb43-17038354229e",
+    "fullname": "Jhean Carlos Pacheco Bermúdez"
+  },
+  "nelspenm": {
+    "email": "npena@deuna.com",
+    "user_id_jira": "62f6a35cd49df231b62a9eb4",
+    "fullname": "Nelson Peña"
+  },
+  "ocardona5": {
+    "email": "ocardona@getduna.com",
+    "user_id_jira": "5f8a5e57693233007670d07e",
+    "fullname": "Oscar Cardona"
+  },
+  "ppined1": {
+    "email": "ppineda@deuna.com",
+    "user_id_jira": "712020:2ee4a0d0-23fc-4057-b4b9-cdf97a3e182c",
+    "fullname": "Pedro Luis Pineda"
+  },
+  "ptorresdeuna": {
+    "email": "ptorres@deuna.com",
+    "user_id_jira": "712020:794f3ac8-1dd2-4968-8689-297870318560",
+    "fullname": "Pedro Torres"
+  },
+  "raynerhnmcdeuna": {
+    "email": "rmontes@getduna.com",
+    "user_id_jira": "6160955dd9820f0070e28d4d",
+    "fullname": "Rayner Montes"
+  },
+  "renxzen": {
+    "email": "rmondragon@deuna.com",
+    "user_id_jira": "712020:dc9c7766-9b58-4d21-af71-0b9eeaa5a86a",
+    "fullname": "Renzo Mondragón"
+  },
+  "ronsilver": {
+    "email": "jmaturana@getduna.com",
+    "user_id_jira": "5f765f8abd1298006fc7f334",
+    "fullname": "Jorge Maturana"
+  },
+  "sllumiquinga": {
+    "email": "sllumiquinga@deuna.com",
+    "user_id_jira": "712020:3e2b1afa-c26b-460d-abfd-51fdaebe577b",
+    "fullname": "Selena Llumiquinga Guasumba"
+  },
+  "smartinez-ts": {
+    "email": "smartinez@deuna.com",
+    "user_id_jira": "63a5fae0741248746bf5a86d",
+    "fullname": "Steven Martinez"
+  },
+  "StivenAlejandroPerez": {
+    "email": "saperez@deuna.com",
+    "user_id_jira": "712020:5ea26ebb-4339-458b-9333-fba4983cfac3",
+    "fullname": "Stiven Alejandro Perez Luna"
+  },
+  "tomaschild": {
+    "email": "tchild@deuna.com",
+    "user_id_jira": "712020:b4ddc5b0-b1ba-43cc-bf73-315e31605401",
+    "fullname": "Tomás Child"
+  },
+  "fgarofalo-deuna": {
+    "email": "fgarofalo@deuna.com",
+    "user_id_jira": "712020:d3495436-6dc6-4831-837b-88f607350560",
+    "fullname": "Federico Garofalo"
+  },
+  "gforerod1": {
+    "email": "gforero@deuna.com",
+    "user_id_jira": "712020:618e02c4-d967-4385-b6c6-ae73faa50112",
+    "fullname": "Guillermo Forero"
+  },
+  "JorgeRocha1994": {
+    "email": "jrocha@deuna.com",
+    "user_id_jira": "712020:47ce3326-e262-4343-b5ca-d666d245bc60",
+    "fullname": "Jorge López"
+  },
+  "karen-lopez": {
+    "email": "klopez@deuna.com",
+    "user_id_jira": "712020:2177f4a5-f392-45d5-bb59-53874e111231",
+    "fullname": "Karen Lopez"
+  },
+  "leduardobueno": {
+    "email": "ebueno@deuna.com",
+    "user_id_jira": "712020:c797aa90-541d-4266-937c-10d00c25d539",
+    "fullname": "Luiz Eduardo Bueno"
+  },
+  "Pauli2412": {
+    "email": "pchalco@deuna.com",
+    "user_id_jira": "712020:ab6dfceb-f3a7-4be0-8123-40d5998755ff",
+    "fullname": "Paulina Chalco"
+  },
+  "romacardozx": {
+    "email": "rcardozo@deuna.com",
+    "user_id_jira": "712020:75fe9682-2ca8-4018-9910-f6a6fb793b41",
+    "fullname": "Roman Alejandro Cardozo"
+  },
+  "zapatacjc": {
+    "email": "jzapata@deuna.com",
+    "user_id_jira": "712020:4ee58f16-1806-44ea-8aa1-30b5fad76fcf",
+    "fullname": "Juan Carlos Zapata"
+  },
+  "jmora-co": {
+    "email": "jmora@deuna.com",
+    "user_id_jira": "712020:e2303ea3-d96b-46c1-90f8-48f6ecd8f171",
+    "fullname": "Julian David Mora Ramos"
+  },
+  "fridamcoronado": {
+    "email": "fcoronado@deuna.com",
+    "user_id_jira": "712020:bb2d7c01-246c-4ba2-ab7a-5f6dc499d88c",
+    "fullname": "Frida Sofia Martinez "
+  },
+  "deuna-qa-testgen[bot]": {
+    "email": "qa-testgen-bot@deuna.com",
+    "user_id_jira": "712020:f075ba8f-c02c-4e4c-9297-10099fe8bed2",
+    "fullname": "qa-testgen-bot"
+  }
+}

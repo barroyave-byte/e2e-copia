@@ -1,0 +1,13 @@
+export const ZEPHYR_ACCESS_TOKEN = process.env.ZEPHYR_ACCESS_TOKEN;
+export const ZEPHYR_PROJECT_NAME = process.env.ZEPHYR_PROJECT_NAME;
+export const ZEPHYR_ENVIRONMENT_EXECUTION = process.env.ZEPHYR_ENVIRONMENT_EXECUTION;
+export const ZEPHYR_CYCLE_NAME = process.env.ZEPHYR_CYCLE_NAME;
+export const PUBLISH_RESULTS_ZEPHYR = process.env.PUBLISH_RESULTS_ZEPHYR;
+export const USER_ID_ZEPHYR = process.env.USER_ID_ZEPHYR || '63e704e786a66a7cc7ab6e34';
+export const TEST_CYCLE_ID = process.env.TEST_CYCLE_ID;
+export const URL_API_ZEPHYR = 'https://api.zephyrscale.smartbear.com';
+export const QUERY_ID = '3951';
+export const JIRA_API_URL = 'https://deuna.atlassian.net/rest/api/3';
+export const JIRA_API_TOKEN =
+  'ATATT3xFfGF0Run3F8iVmkJonDbCEgE8txw1w2J1Bu9PzuT8UWuuO9KEuvrv1gTEfgglbJsmJ2dBi009q_Yu8TBLEHWXdetU-KrHj3tZogf8ok1jv3SN0RAroybatEuaWhemxupvPqN7AUO3hY3bFz03WiASi4TTwYlpCNxA2k8sbzpgSzvniJo=1226FB82';
+export const JIRA_AUTH_USER = 'jnovoa@deuna.com';

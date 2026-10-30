@@ -1,0 +1,63 @@
+name: (PreProduction - Dev) Build and Push Docker Image to ECR - QA
+
+on:
+  push:
+    branches: develop
+# A newer push to develop supersedes an in-flight build, so an older build can
+# never finish last and overwrite the -latest tag with stale code.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+env:
+  AWS_REGION : "us-east-2" ## AWS Region
+  ECR_REPOSITORY : "pre-production" ## Repository Name ECR
+  ROLE_TO_ASSUME : "arn:aws:iam::790714449507:role/RoleForGithubPushECRAllServiceStaging" ## Role to Assume WITH Policy
+
+jobs:
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract repository name
+        run: |
+          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
+          echo "REPONAME=$REPO_NAME" >> $GITHUB_ENV
+      - uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # Build and push in one step. The old `--load` + `docker tag` + `docker push`
+      # exported the whole image into the runner's Docker (~3.5 min) and then
+      # pushed it again. The layer cache lives in ECR next to the image: the old
+      # local cache dir was never restored between runs, so every build started
+      # from scratch and re-uploaded the ~1 GB dependency layer.
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.REPONAME }}-latest
+          cache-from: type=registry,ref=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.REPONAME }}-buildcache
+          # ignore-error: a failed cache export (e.g. a missing ECR permission on the
+          # -buildcache tag) must not fail a run whose image was already pushed.
+          cache-to: type=registry,ref=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.REPONAME }}-buildcache,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
+          # Keep a plain single-platform manifest, as `docker push` produced before.
+          provenance: false
+          sbom: false

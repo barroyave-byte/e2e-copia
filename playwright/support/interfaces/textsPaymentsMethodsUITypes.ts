@@ -1,0 +1,15 @@
+export type TextPaymentMethods =
+  | 'Tarjeta de crédito'
+  | 'Efectivo'
+  | 'PayPal'
+  | 'Transferencia'
+  | 'PSE'
+  | 'Datafono (Terminal)'
+  | 'Payu PSE'
+  | 'Kueski Pay'
+  | 'Aplazo'
+  | 'Click to Pay (Payment Widget)'
+  | 'Payment Vault (Web SDK)'
+  | 'Payment Vault (Web SDK External Button)'
+  | 'PayPal Pay Later'
+  | 'Venmo';

@@ -1,0 +1,17 @@
+{
+  "psp": "stripe",
+  "cards": [
+    {
+      "variableName": "stripeMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "stripeVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

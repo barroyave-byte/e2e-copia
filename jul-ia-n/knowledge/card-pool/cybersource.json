@@ -1,0 +1,23 @@
+{
+  "psp": "cybersource",
+  "cards": [
+    {
+      "variableName": "cybersourceMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "cybersourceVisaCardSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "cybersourceAmexSuccessful",
+      "country": null,
+      "brand": "amex",
+      "notes": null
+    }
+  ]
+}

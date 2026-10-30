@@ -1,0 +1,10 @@
+{
+  // Typechecks the eval runner against its own node_modules (promptfoo), which the root
+  // tsconfig excludes. Run `npm run ai-heal:eval:install` first, then `npx tsc -p jul-ia-n/eval`.
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.cache/typescript/tsconfig.tsbuildinfo"
+  },
+  "include": ["run-eval.ts"],
+  "exclude": ["node_modules"]
+}

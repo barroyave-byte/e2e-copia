@@ -1,0 +1,29 @@
+{
+  "psp": "pagbank",
+  "cards": [
+    {
+      "variableName": "pagbankVisaSuccessfulProcessing",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "pagbankMasterCardSucessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "pagbankMasterCardNubankSucessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "pagbankVisaCredicardSucessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

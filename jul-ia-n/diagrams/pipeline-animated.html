@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>jul-IA-N · Animated Pipeline</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#0f172a; --ink:#e2e8f0; --muted:#94a3b8;
+    --llm:#fde68a; --llm-b:#d97706; --llm-ink:#7c2d12;
+    --embed:#fbcfe8; --embed-b:#db2777; --embed-ink:#831843;
+    --plain:#dbeafe; --plain-b:#2563eb; --plain-ink:#1e3a8a;
+    --verify:#bfdbfe; --verify-b:#1d4ed8;
+    --pr:#bbf7d0; --pr-b:#16a34a; --pr-ink:#14532d;
+    --csv:#c7d2fe; --csv-b:#4f46e5; --csv-ink:#312e81;
+    --human:#fed7aa; --human-b:#ea580c; --human-ink:#7c2d12;
+    --l1:#14b8a6; --l2:#6366f1; --l3:#f59e0b; --l4:#f43f5e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter','Segoe UI',system-ui,sans-serif}
+  header{padding:18px 28px 12px;background:linear-gradient(180deg,#0f172a,#0b1220);border-bottom:1px solid #1e293b}
+  header h1{margin:0;font-size:22px;letter-spacing:.2px}
+  header h1 .sub{color:var(--muted);font-weight:500;font-size:15px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .chip{width:14px;height:14px;border-radius:4px;border:2px solid;display:inline-block}
+  .c-llm{background:var(--llm);border-color:var(--llm-b)}
+  .c-embed{background:var(--embed);border-color:var(--embed-b)}
+  .c-plain{background:var(--plain);border-color:var(--plain-b)}
+  .c-verify{background:var(--verify);border-color:var(--verify-b)}
+  .c-skip{background:#1e293b;border-color:#475569}
+
+  .controls{display:flex;align-items:center;gap:12px;padding:12px 28px;background:#0f172a;border-bottom:1px solid #1e293b;flex-wrap:wrap}
+  .btn{font-size:14px;font-weight:700;padding:9px 16px;border-radius:9px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer}
+  .btn:hover{background:#334155}
+  .btn.primary{background:var(--l1);border-color:var(--l1);color:#04302b}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .speeds{display:flex;gap:6px}
+  .speeds .btn{padding:7px 11px;font-size:13px}
+  .speeds .btn.active{background:var(--llm);border-color:var(--llm-b);color:var(--llm-ink)}
+  .scrub{flex:1;min-width:220px;display:flex;align-items:center;gap:10px}
+  input[type=range]{width:100%;accent-color:var(--l1)}
+  .clock{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;min-width:74px;text-align:right}
+
+  .stagewrap{padding:18px 22px 8px;overflow:auto}
+  .scaler{transform-origin:top left}
+  .stage{position:relative;width:1560px;height:860px}
+
+  .guide{position:absolute;inset:0;pointer-events:none}
+
+  .node{position:absolute;border-radius:12px;border:1.5px solid #334155;background:#111a2e;
+        color:#e2e8f0;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.35);transition:box-shadow .25s,transform .25s,border-color .25s}
+  .node .t{font-weight:800;font-size:15px;line-height:1.15}
+  .node .s{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.2}
+  .node.llm{background:#3a2c07;border-color:var(--llm-b)} .node.llm .t{color:var(--llm)}
+  .node.embed{background:#3a0f26;border-color:var(--embed-b)} .node.embed .t{color:var(--embed)}
+  .node.plain{background:#0f213f;border-color:var(--plain-b)}
+  .node.io{background:#0b1220;border-color:#64748b}
+  .node.verify{background:#0e2350;border-color:var(--verify-b)} .node.verify .t{color:#bfdbfe}
+  .node.okpr{background:#0d2a1a;border-color:var(--pr-b)} .node.okpr .t{color:#86efac}
+  .node.okcsv{background:#1a1c44;border-color:var(--csv-b)} .node.okcsv .t{color:#c7d2fe}
+  .node.human{background:#3a2410;border-color:var(--human-b)} .node.human .t{color:#fed7aa}
+  .node.active{transform:scale(1.06);box-shadow:0 0 0 3px rgba(253,230,138,.35),0 0 26px rgba(253,230,138,.55)}
+  .node.embed.active{box-shadow:0 0 0 3px rgba(251,207,232,.35),0 0 26px rgba(251,207,232,.55)}
+  .node.verify.active{box-shadow:0 0 0 3px rgba(59,130,246,.4),0 0 26px rgba(59,130,246,.6)}
+  .node.pop{animation:pop .5s ease}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+  .colhdr{position:absolute;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+
+  .dot{position:absolute;width:10px;height:10px;border-radius:50%;background:#f8fafc;border:1.5px solid #cbd5e1;
+       transform:translate(-50%,-50%);transition:left .8s cubic-bezier(.4,0,.2,1),top .8s cubic-bezier(.4,0,.2,1),opacity .45s;box-shadow:0 0 6px rgba(248,250,252,.5)}
+
+  .tok{position:absolute;transform:translate(-50%,-50%);transition:left .95s cubic-bezier(.4,0,.2,1),top .95s cubic-bezier(.4,0,.2,1),opacity .4s;
+       display:flex;flex-direction:column;align-items:center;opacity:0}
+  .tok .pill{font-weight:900;font-size:14px;color:#04121f;padding:7px 12px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.45);white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .tok .mult{font-size:11px;font-weight:800;background:rgba(0,0,0,.28);color:#fff;border-radius:999px;padding:1px 7px}
+  .tok .tag{margin-top:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:#1e293b;color:#cbd5e1;border:1px solid #334155;white-space:nowrap;opacity:0;transition:opacity .3s}
+  .tok .tag.show{opacity:1}
+  .tok .tag.good{background:#0d2a1a;border-color:var(--pr-b);color:#86efac}
+  .tok .tag.warn{background:#3a2410;border-color:var(--human-b);color:#fed7aa}
+  .tok .tag.mem{background:#3a0f26;border-color:var(--embed-b);color:#fbcfe8}
+  .t1 .pill{background:var(--l1)} .t2 .pill{background:var(--l2);color:#fff} .t3 .pill{background:var(--l3)} .t4 .pill{background:var(--l4);color:#fff}
+
+  .stage.noanim .dot,.stage.noanim .tok{transition:none !important}
+
+  /* counters */
+  .counters{position:absolute;left:975px;top:20px;width:290px;background:#0c1730;border:1px solid #1e293b;border-radius:14px;padding:14px 16px}
+  .counters h3{margin:0 0 10px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .crow{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dashed #1e293b}
+  .crow:last-child{border-bottom:0}
+  .crow .lbl{font-size:13px;color:#cbd5e1}
+  .crow .val{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums}
+  .val.pop{animation:vpop .45s ease}
+  @keyframes vpop{0%{transform:scale(1)}45%{transform:scale(1.35);color:#fde68a}100%{transform:scale(1)}}
+  .v-used{color:#fde68a} .v-saved{color:#86efac} .v-pr{color:#86efac} .v-csv{color:#c7d2fe} .v-human{color:#fed7aa}
+
+  /* caption bar */
+  .capbar{position:absolute;left:40px;top:770px;width:900px;background:#0c1730;border:1px solid #1e293b;border-left:4px solid var(--l1);border-radius:12px;padding:12px 16px;min-height:60px}
+  #cap{font-size:16px;font-weight:700;line-height:1.3}
+  #capsub{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.3}
+
+  footer{padding:10px 28px 22px;color:#64748b;font-size:12px}
+  footer code{color:#94a3b8}
+</style>
+</head>
+<body>
+<header>
+  <h1>jul-IA-N · E2E Auto-heal <span class="sub">— how each failed test travels through the pipeline</span></h1>
+  <div class="legend">
+    <span><i class="chip c-llm"></i> LLM step 🧠</span>
+    <span><i class="chip c-embed"></i> Embeddings / KB 🔎</span>
+    <span><i class="chip c-plain"></i> Deterministic (no LLM)</span>
+    <span><i class="chip c-verify"></i> Verification (reruns the test)</span>
+    <span>🔁 agentic subagent &nbsp;·&nbsp; ×N = duplicates that inherit</span>
+  </div>
+</header>
+
+<div class="controls">
+  <button class="btn primary" id="playBtn">▶ Play</button>
+  <button class="btn" id="resetBtn">⟲ Reset</button>
+  <div class="speeds">
+    <button class="btn" data-sp="0.5">0.5×</button>
+    <button class="btn active" data-sp="1">1×</button>
+    <button class="btn" data-sp="1.6">1.6×</button>
+  </div>
+  <div class="scrub">
+    <input type="range" id="scrub" min="0" max="1000" value="0" />
+    <span class="clock" id="clock">0.0s</span>
+  </div>
+</div>
+
+<div class="stagewrap">
+  <div class="scaler" id="scaler">
+    <div class="stage" id="stage">
+      <svg class="guide" viewBox="0 0 1560 860" preserveAspectRatio="none">
+        <defs>
+          <marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#334155"/>
+          </marker>
+        </defs>
+        <!-- funnel -->
+        <line x1="640" y1="86" x2="640" y2="364" stroke="#334155" stroke-width="2"/>
+        <!-- fan to lanes -->
+        <path d="M640,364 C640,400 250,390 130,430" stroke="#243147" stroke-width="2" fill="none"/>
+        <path d="M640,364 C640,430 250,475 130,515" stroke="#243147" stroke-width="2" fill="none"/>
+        <path d="M640,364 C640,480 250,565 130,600" stroke="#243147" stroke-width="2" fill="none"/>
+        <path d="M640,364 C640,550 250,655 130,685" stroke="#243147" stroke-width="2" fill="none"/>
+        <!-- lane baselines -->
+        <line x1="130" y1="430" x2="970" y2="430" stroke="#1c2740" stroke-width="2"/>
+        <line x1="130" y1="515" x2="970" y2="515" stroke="#1c2740" stroke-width="2"/>
+        <line x1="130" y1="600" x2="970" y2="600" stroke="#1c2740" stroke-width="2"/>
+        <line x1="130" y1="685" x2="970" y2="685" stroke="#1c2740" stroke-width="2"/>
+        <!-- outcome connectors -->
+        <line x1="960" y1="430" x2="1055" y2="430" stroke="#243147" stroke-width="2" marker-end="url(#ar)"/>
+        <line x1="960" y1="515" x2="1150" y2="470" stroke="#243147" stroke-width="1.5"/>
+        <path d="M300,600 C520,600 900,588 1055,588" stroke="#243147" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+        <path d="M490,685 C700,690 950,698 1055,698" stroke="#243147" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+      </svg>
+
+      <!-- column headers for the leader arena -->
+      <div class="colhdr" style="left:80px;top:378px">enrich</div>
+      <div class="colhdr" style="left:250px;top:378px">KB score</div>
+      <div class="colhdr" style="left:445px;top:378px">orchestrator 🧠</div>
+      <div class="colhdr" style="left:650px;top:378px">subagent 🧠</div>
+      <div class="colhdr" style="left:855px;top:378px">verify</div>
+
+      <!-- counters -->
+      <div class="counters">
+        <h3>Run scoreboard</h3>
+        <div class="crow"><span class="lbl">LLM calls used</span><span class="val v-used" id="c-used">0</span></div>
+        <div class="crow"><span class="lbl">LLM calls avoided</span><span class="val v-saved" id="c-saved">0</span></div>
+        <div class="crow"><span class="lbl">PRs opened</span><span class="val v-pr" id="c-pr">0</span></div>
+        <div class="crow"><span class="lbl">CSV (known-issue)</span><span class="val v-csv" id="c-csv">0</span></div>
+        <div class="crow"><span class="lbl">To human triage</span><span class="val v-human" id="c-human">0</span></div>
+      </div>
+
+      <!-- caption -->
+      <div class="capbar">
+        <div id="cap">A Playwright regression finished with <b>14 failed tests</b>.</div>
+        <div id="capsub">Press <b>Play</b> to see the journey of each case.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <b>Illustrative</b> scenario (fictional data) — mirrors the real pipeline in <code>jul-ia-n/heal.ts</code>: classify → dedup → prepare KB → per leader (enrich → KB score → orchestrator → subagent → verify → submit).
+  The KB can short-circuit leaders (<code>apply</code> / <code>known-issue</code>). Duplicates inherit the leader's decision without spending any LLM calls.
+</footer>
+
+<script>
+(function(){
+  const stage = document.getElementById('stage');
+
+  /* ---------- nodes ---------- */
+  const NODES = [
+    {id:'input',   x:490,y:26, w:300,h:60, cls:'io',    t:'test-results.json', s:'14 failed tests'},
+    {id:'classify',x:490,y:116,w:300,h:68, cls:'llm',   t:'A · classify 🧠',   s:'1 LLM call · root cause, team, step'},
+    {id:'dedup',   x:490,y:214,w:300,h:60, cls:'plain', t:'C · dedup',         s:'4 leaders · 10 duplicates'},
+    {id:'kbprep',  x:490,y:304,w:300,h:60, cls:'embed', t:'prepare KB (1×) 🔎',s:'batched embeddings'},
+    {id:'o_pr',    x:1060,y:400,w:180,h:60,cls:'okpr',  t:'PR draft ✅',        s:'ready for review'},
+    {id:'o_csv',   x:1060,y:560,w:180,h:56,cls:'okcsv', t:'CSV 📄',             s:'known-issue'},
+    {id:'o_human', x:1060,y:670,w:180,h:56,cls:'human', t:'Human triage 🙋',   s:'low confidence'},
+  ];
+  const nodeEl = {};
+  NODES.forEach(n=>{
+    const d=document.createElement('div');
+    d.className='node '+n.cls;
+    d.style.cssText=`left:${n.x}px;top:${n.y}px;width:${n.w}px;min-height:${n.h}px`;
+    d.innerHTML=`<div class="t">${n.t}</div><div class="s">${n.s}</div>`;
+    stage.appendChild(d); nodeEl[n.id]=d;
+  });
+
+  /* ---------- column x-centers & lane y-centers ---------- */
+  const COL={enrich:118,kb:290,orch:490,sub:695,verify:885};
+  const LANE={1:430,2:515,3:600,4:685};
+  // parked just right of each outcome node (which ends at x:1240) so the pill — and its wider tag — never cover the node's label
+  const OUT ={pr:{x:1400,y:430}, csv:{x:1400,y:588}, human:{x:1400,y:698}};
+  // left margin, clear of the node stack (x 490-790) and stacked vertically so the 4 pills never crowd each other
+  const DEDUP={1:{x:260,y:100},2:{x:260,y:185},3:{x:260,y:270},4:{x:260,y:355}};
+
+  /* ---------- 14 dots ---------- */
+  // single row, parked in the clear strip under each node's text (never on top of it)
+  const DOTROW_X = i => 524 + i*18;  // ~32-34px clear of the box's left/right edges
+  const dots=[];
+  for(let i=0;i<14;i++){
+    const el=document.createElement('div'); el.className='dot';
+    el.dataset.hx = DOTROW_X(i);        // home x
+    el.dataset.hy = 74;                 // home y — inside 'input', below its two text lines
+    el.style.left=el.dataset.hx+'px'; el.style.top=el.dataset.hy+'px';
+    stage.appendChild(el); dots.push(el);
+  }
+
+  /* ---------- 4 leader tokens ---------- */
+  const SIZE={1:5,2:4,3:3,4:2};
+  const leaders={};
+  [1,2,3,4].forEach(k=>{
+    const el=document.createElement('div'); el.className='tok t'+k;
+    el.innerHTML=`<div class="pill">leader-${k}<span class="mult">×${SIZE[k]}</span></div><div class="tag"></div>`;
+    el.style.left=DEDUP[k].x+'px'; el.style.top=DEDUP[k].y+'px';
+    stage.appendChild(el); leaders[k]={el,tag:el.querySelector('.tag')};
+  });
+
+  /* ---------- helpers ---------- */
+  const cap=document.getElementById('cap'), capsub=document.getElementById('capsub');
+  const cEl={used:document.getElementById('c-used'),saved:document.getElementById('c-saved'),
+             pr:document.getElementById('c-pr'),csv:document.getElementById('c-csv'),human:document.getElementById('c-human')};
+
+  function setCap(m,s){cap.innerHTML=m; capsub.innerHTML=s||'';}
+  function moveTok(k,x,y){const l=leaders[k]; l.el.style.left=x+'px'; l.el.style.top=y+'px';}
+  function showTok(k,on){leaders[k].el.style.opacity=on?1:0;}
+  function setTag(k,txt,cls){const t=leaders[k].tag; t.textContent=txt||''; t.className='tag'+(txt?' show':'')+(cls?(' '+cls):'');}
+  function node(id){return nodeEl[id];}
+  function setActive(id,on){node(id).classList.toggle('active',on);}
+  function pop(id){const n=node(id); n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop');}
+  function setCount(key,val){const e=cEl[key]; if(e.textContent!=String(val)){e.textContent=val; if(!scrubbing){e.classList.remove('pop');void e.offsetWidth;e.classList.add('pop');}}}
+
+  /* ---------- timeline (seconds) ---------- */
+  const EV=[
+    {t:0.0, fn:()=>{setCap('A Playwright regression finished with <b>14 failed tests</b>.','Each dot = one failed test.');}},
+    // A classify
+    {t:1.4, fn:()=>{dots.forEach((d,i)=>{d.style.left=DOTROW_X(i)+'px'; d.style.top='172px';}); setActive('classify',true);
+                     setCap('Step A · <b>classify</b> 🧠','An LLM classifies the 14 failures in <b>a single call</b> (root cause, owning team, step that broke).');}},
+    {t:2.2, fn:()=>setCount('used',1)},
+    {t:3.2, fn:()=>{setActive('classify',false); dots.forEach((d,i)=>{d.style.left=DOTROW_X(i)+'px'; d.style.top='262px';});
+                     setCap('Step C · <b>dedup</b>','Groups identical failures by their root cause.');}},
+    // dedup -> leaders
+    {t:4.4, fn:()=>{dots.forEach(d=>d.style.opacity=0); [1,2,3,4].forEach(k=>showTok(k,true));
+                     setCap('4 unique <b>leaders</b> + 10 <b>duplicates</b>','Duplicates <b>inherit</b> their leader\'s decision — <b>0 LLM calls</b>. (×N = group size)');
+                     setCount('saved',10);}},
+    // prepare KB
+    {t:5.8, fn:()=>{setActive('kbprep',true); setCap('<b>prepare KB</b> (once) 🔎','Embeddings for the knowledge base + for every leader, <b>batched</b> — not per case.');}},
+    {t:6.9, fn:()=>{setActive('kbprep',false); [1,2,3,4].forEach(k=>moveTok(k,COL.enrich,LANE[k]));
+                     setCap('Each leader enters the pipeline','Processed <b>in parallel</b> (concurrent pool). Only leaders pay for I/O and LLM calls.');}},
+    // enrich -> kb score
+    {t:8.1, fn:()=>{[1,2,3,4].forEach(k=>moveTok(k,COL.kb,LANE[k]));
+                     setCap('Step F · <b>KB score</b>','Have we seen this failure before? Cosine similarity against memory (no network, no LLM).');}},
+    {t:9.3, fn:()=>{setTag(1,'KB ✓ apply','mem'); setTag(3,'KB ✓✓ known-issue','mem'); setTag(2,'no match'); setTag(4,'no match');
+                     setCap('Two matches in memory','leader-1 carries a <b>reusable fix</b> (apply); leader-3 is a <b>known external issue</b> (known-issue).');}},
+    // leader-3 known-issue -> CSV
+    {t:10.4, fn:()=>{moveTok(3,OUT.csv.x,OUT.csv.y); setTag(3,'skips orchestrator · subagent · verify','mem');
+                      setCap('leader-3 = <b>known-issue</b>','External issue with no fix on our side → <b>skips orchestrator, subagent AND verify</b> → writes straight to the CSV.');
+                      setCount('saved',12); setCount('csv',1); pop('o_csv');}},
+    // leader-1 apply glides to verify
+    {t:11.4, fn:()=>{moveTok(1,COL.verify,LANE[1]); setTag(1,'reuses fix · skips 2 LLM calls','good'); setActive('verify',true);
+                      setCap('leader-1 = <b>apply</b>','Reuses a fix saved in the KB: <b>skips orchestrator and subagent</b> (2 LLM calls), but <b>still gets verified</b>.');
+                      setCount('saved',14);}},
+    // leader-2 orchestrator
+    {t:12.6, fn:()=>{moveTok(2,COL.orch,LANE[2]); setActive('orch',true); setTag(2,'reasoning: test or service?');
+                      moveTok(4,COL.orch,LANE[4]);
+                      setCap('leader-2 and leader-4 → <b>orchestrator</b> 🧠','Not in memory: an LLM decides the specialist, the suspected repo, and the <b>confidence</b>.');
+                      setCount('used',3);}},
+    // leader-2 subagent (agentic)
+    {t:14.0, fn:()=>{setActive('orch',false); moveTok(2,COL.sub,LANE[2]); setActive('sub',true); setTag(2,'assertFixer 🔁');
+                      setCap('leader-2 → <b>assertFixer</b> (agentic 🔁)','Explores the repo with <b>read-only</b> tools (read_file · grep · glob) and proposes the fix.');
+                      setCount('used',4);}},
+    // leader-2 verify
+    {t:15.4, fn:()=>{setActive('sub',false); moveTok(2,COL.verify,LANE[2]); setActive('verify',true); setTag(2,'applies fix · reruns the test','good');
+                      setCap('Step I · <b>verify</b> (safety net)','Applies the fix in a worktree and <b>reruns the test</b> (1× by default, configurable). No PR opens without that rerun passing.');}},
+    // leader-1 -> PR
+    {t:16.3, fn:()=>{moveTok(1,OUT.pr.x,OUT.pr.y); setTag(1,'PR draft ✅','good'); setCount('pr',1); pop('o_pr');}},
+    // leader-2 -> PR
+    {t:17.1, fn:()=>{setActive('verify',false); moveTok(2,OUT.pr.x,OUT.pr.y-30); setTag(2,'PR draft ✅','good'); setCount('pr',2); pop('o_pr');
+                      setCap('leader-1 and leader-2 → <b>PR draft</b> ✅','Verified fixes, ready for human review.');}},
+    // leader-4 confidence gate -> human
+    {t:18.1, fn:()=>{setActive('orch',false); setTag(4,'confidence 0.6 < 0.8','warn'); moveTok(4,OUT.human.x,OUT.human.y);
+                      setCap('leader-4 → <b>human triage</b> 🙋','The orchestrator falls short of the 0.8 confidence threshold: the case is logged and <b>waits for a human</b>. It never invents a shaky fix.');
+                      setCount('human',1); pop('o_human');}},
+    // finale
+    {t:19.4, fn:()=>{[1,2,3,4].forEach(k=>{leaders[k].el.style.filter='drop-shadow(0 0 10px currentColor)';});
+                      setCap('Run result: <b>2 PRs · 1 CSV · 1 human</b>','10 duplicates inherited for free. <b>LLM calls used: 4 · avoided: 14</b> — from 14 red failures down to just 1 case a human has to look at from scratch.');}},
+    {t:20.6, fn:()=>{[1,2,3,4].forEach(k=>{leaders[k].el.style.filter='';});}},
+  ];
+  EV.sort((a,b)=>a.t-b.t);
+  const DURATION=21;
+
+  /* ---------- engine ---------- */
+  let clock=0, playing=false, speed=1, last=0, scrubbing=false;
+  const scrub=document.getElementById('scrub'), clockEl=document.getElementById('clock');
+  const playBtn=document.getElementById('playBtn');
+
+  function initState(){
+    // dots home
+    dots.forEach(d=>{d.style.opacity=1; d.style.left=d.dataset.hx+'px'; d.style.top=d.dataset.hy+'px';});
+    // leaders
+    [1,2,3,4].forEach(k=>{showTok(k,false); moveTok(k,DEDUP[k].x,DEDUP[k].y); setTag(k,''); leaders[k].el.style.filter='';});
+    // nodes + column glows off
+    Object.values(nodeEl).forEach(n=>n.classList.remove('active','pop'));
+    setActive('orch',false); setActive('sub',false); setActive('verify',false);
+    setCount('used',0); setCount('saved',0); setCount('pr',0); setCount('csv',0); setCount('human',0);
+    setCap('A Playwright regression finished with <b>14 failed tests</b>.','Press <b>Play</b> to see the journey of each case.');
+  }
+
+  // Soft highlight boxes behind the orch/sub/verify columns, glowed via setActive():
+  const colBoxes={};
+  [['orch',COL.orch,'llm'],['sub',COL.sub,'llm'],['verify',COL.verify,'verify']].forEach(([id,cx,cls])=>{
+    const b=document.createElement('div');
+    b.style.cssText=`position:absolute;left:${cx-70}px;top:395px;width:140px;height:320px;border-radius:16px;opacity:0;transition:opacity .3s;pointer-events:none;`;
+    b.style.background = cls==='verify' ? 'radial-gradient(circle at 50% 30%,rgba(59,130,246,.22),transparent 70%)'
+                                        : 'radial-gradient(circle at 50% 30%,rgba(253,230,138,.20),transparent 70%)';
+    stage.insertBefore(b, stage.firstChild.nextSibling); colBoxes[id]=b;
+  });
+  // real setActive for column ids:
+  const _setActive=setActive;
+  setActive=function(id,on){ if(colBoxes[id]){colBoxes[id].style.opacity=on?1:0;} else {_setActive(id,on);} };
+
+  function render(t){
+    // reset then apply all events up to t, instantly
+    scrubbing=true; stage.classList.add('noanim');
+    initState();
+    for(const e of EV){ if(e.t<=t+1e-6) e.fn(); }
+    clockEl.textContent=t.toFixed(1)+'s';
+    scrub.value=Math.round(t/DURATION*1000);
+    // re-enable transitions next frame
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{stage.classList.remove('noanim'); scrubbing=false;}));
+  }
+
+  let appliedIdx=0;
+  function tick(now){
+    if(!playing) return;
+    const dt=(now-last)/1000*speed; last=now; clock=Math.min(DURATION,clock+dt);
+    // apply due events (forward, with animation)
+    while(appliedIdx<EV.length && EV[appliedIdx].t<=clock){ EV[appliedIdx].fn(); appliedIdx++; }
+    clockEl.textContent=clock.toFixed(1)+'s'; scrub.value=Math.round(clock/DURATION*1000);
+    if(clock>=DURATION){ pause(); }
+    else requestAnimationFrame(tick);
+  }
+  function play(){
+    if(clock>=DURATION-0.01){ hardReset(); }
+    playing=true; playBtn.textContent='⏸ Pause'; last=performance.now();
+    // sync appliedIdx to current clock
+    appliedIdx=0; while(appliedIdx<EV.length && EV[appliedIdx].t<=clock) appliedIdx++;
+    requestAnimationFrame(tick);
+  }
+  function pause(){ playing=false; playBtn.textContent = clock>=DURATION-0.01 ? '↻ Replay' : '▶ Play'; }
+  function hardReset(){ pause(); clock=0; appliedIdx=0; render(0); playBtn.textContent='▶ Play'; }
+
+  playBtn.onclick=()=>{ playing?pause():play(); };
+  document.getElementById('resetBtn').onclick=hardReset;
+  document.querySelectorAll('.speeds .btn').forEach(b=>b.onclick=()=>{
+    speed=parseFloat(b.dataset.sp);
+    document.querySelectorAll('.speeds .btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  });
+  scrub.oninput=()=>{ pause(); clock=scrub.value/1000*DURATION; render(clock); };
+
+  /* ---------- responsive scaling ---------- */
+  const scaler=document.getElementById('scaler'), wrap=document.querySelector('.stagewrap');
+  function fit(){
+    const avail=wrap.clientWidth-4;
+    const s=Math.min(1, avail/1560);
+    scaler.style.transform=`scale(${s})`;
+    scaler.style.height=(860*s)+'px';
+    scaler.style.width='1560px';
+  }
+  window.addEventListener('resize',fit);
+
+  // boot
+  fit(); render(0);
+})();
+</script>
+</body>
+</html>

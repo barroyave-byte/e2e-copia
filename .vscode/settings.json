@@ -1,0 +1,7 @@
+{
+  "liveServer.settings.port": 5501,
+  "testing.automaticallyOpenPeekView": "never",
+  "testing.openTesting": "neverOpenOnSessionStart",
+  "testing.defaultGutterEnabled": true,
+  "testing.automaticallyOpenTestResults": "neverOpenOnSessionStart"
+}

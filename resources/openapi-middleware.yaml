@@ -1,0 +1,1378 @@
+openapi: 3.0.3
+info:
+  title: VTEX Middleware API
+  description: |
+    API middleware para integración de pagos entre DEUNA y VTEX.
+    Este servicio actúa como intermediario para procesar transacciones, 
+    gestionar pagos, y manejar credenciales de merchants.
+  version: 1.0.0
+  contact:
+    name: DEUNA Engineering
+    email: engineering@deuna.com
+
+servers:
+  - url: '{protocol}://{host}:{port}'
+    description: Servidor configurable
+    variables:
+      protocol:
+        default: http
+        enum: [http, https]
+      host:
+        default: localhost
+      port:
+        default: '3010'
+
+tags:
+  - name: Health
+    description: Endpoints de health check
+  - name: Transactions
+    description: Operaciones de transacciones y pagos VTEX
+  - name: Installments
+    description: Gestión de cuotas e installments
+  - name: Credentials
+    description: Gestión de credenciales de merchants
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Verifica el estado del servicio
+      operationId: getHealthcheck
+      responses:
+        '200':
+          description: Servicio saludable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthcheckResponse'
+
+  /api/v1/payment-methods:
+    get:
+      tags:
+        - Transactions
+      summary: Obtener métodos de pago
+      description: Retorna la lista de métodos de pago soportados por VTEX
+      operationId: getPaymentMethods
+      responses:
+        '200':
+          description: Lista de métodos de pago
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPaymentMethodsResponse'
+
+  /api/v1/manifest:
+    get:
+      tags:
+        - Transactions
+      summary: Obtener manifest
+      description: Retorna la configuración del manifest para VTEX Payment Provider
+      operationId: getManifest
+      responses:
+        '200':
+          description: Configuración del manifest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetManifestResponse'
+
+  /api/v1/payments:
+    post:
+      tags:
+        - Transactions
+      summary: Crear pago
+      description: Crea un nuevo pago basado en una solicitud de VTEX
+      operationId: createPayment
+      security:
+        - ApiKeyAuth: []
+        - MerchantToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '200':
+          description: Pago creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePaymentResponse'
+        '400':
+          description: Request inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/payments/{paymentId}/cancellations:
+    post:
+      tags:
+        - Transactions
+      summary: Cancelar pago
+      description: Cancela un pago que está en estado pendiente
+      operationId: cancelPayment
+      security:
+        - VtexApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelPaymentRequest'
+      responses:
+        '200':
+          description: Cancelación procesada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelPaymentResponse'
+        '400':
+          description: Error en cancelación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/payments/{paymentId}/settlements:
+    post:
+      tags:
+        - Transactions
+      summary: Capturar pago
+      description: Captura/settle de un pago autorizado
+      operationId: settlePayment
+      security:
+        - VtexApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettlePaymentRequest'
+      responses:
+        '200':
+          description: Pago capturado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlePaymentResponse'
+        '400':
+          description: Error en captura
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/payments/{paymentId}/refunds:
+    post:
+      tags:
+        - Transactions
+      summary: Reembolsar pago
+      description: Reembolsa un pago que fue aprobado
+      operationId: refundPayment
+      security:
+        - VtexApiKey: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundPaymentRequest'
+      responses:
+        '200':
+          description: Reembolso procesado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundPaymentResponse'
+        '400':
+          description: Error en reembolso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/payments/{paymentId}/cancel:
+    post:
+      tags:
+        - Transactions
+      summary: Cancelar pago VTEX (Widget)
+      description: |
+        Usado por DEUNA NOW widget para cancelar una transacción cuando se cierra el modal.
+        **Nota:** Este endpoint está pendiente de activación con VTEX API KEY.
+      operationId: vtexCancelPayment
+      deprecated: true
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VtexCancelPaymentRequest'
+      responses:
+        '200':
+          description: Cancelación procesada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VtexCancelPaymentResponse'
+
+  /api/v1/notify:
+    post:
+      tags:
+        - Transactions
+      summary: Notificar pago
+      description: Usado por EMA para notificar un pago a VTEX
+      operationId: notifyPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotifyPaymentRequest'
+      responses:
+        '200':
+          description: Notificación procesada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotifyPaymentResponse'
+        '400':
+          description: Error en notificación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/place-order:
+    post:
+      tags:
+        - Transactions
+      summary: Crear orden
+      description: Usado por EMA para crear una orden en VTEX
+      operationId: placeOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotifyPaymentRequest'
+      responses:
+        '200':
+          description: Orden creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotifyPaymentResponse'
+        '400':
+          description: Error al crear orden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/transactions/{transactionId}/status/{accountName}:
+    get:
+      tags:
+        - Transactions
+      summary: Estado de transacción
+      description: |
+        Obtiene el estado de una transacción VTEX.
+        **Nota:** Este endpoint está pendiente de activación con VTEX API KEY.
+      operationId: transactionStatus
+      deprecated: true
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          description: ID de la transacción VTEX
+          schema:
+            type: string
+        - name: accountName
+          in: path
+          required: true
+          description: Nombre de la cuenta VTEX
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Estado de la transacción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionStatusResponse'
+
+  /api/v1/transactions/order/{orderId}:
+    get:
+      tags:
+        - Transactions
+      summary: Obtener transacción por Order ID
+      description: Busca una transacción por el ID de la orden
+      operationId: getTransactionByOrderId
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: ID de la orden
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transacción encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTransactionByOrderIdResponse'
+        '404':
+          description: Transacción no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/promotions:
+    post:
+      tags:
+        - Transactions
+      summary: Aplicar promoción
+      description: Aplica promociones de marketing y pago en el carrito VTEX y actualiza la orden DEUNA
+      operationId: applyPromotion
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyPromotionRequest'
+      responses:
+        '200':
+          description: Promoción aplicada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplyPromotionResponse'
+        '400':
+          description: Error al aplicar promoción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/installments/mci:
+    post:
+      tags:
+        - Installments
+      summary: Obtener cuotas MCI
+      description: Retorna las opciones de cuotas para un merchant
+      operationId: getMCIInstallmentsForMerchant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetMCIInstallmentsRequest'
+      responses:
+        '200':
+          description: Opciones de cuotas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMCIInstallmentsResponse'
+        '400':
+          description: Error al obtener cuotas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/credentials:
+    post:
+      tags:
+        - Credentials
+      summary: Crear credenciales
+      description: Crea credenciales para un merchant
+      operationId: createCredential
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCredentialRequest'
+      responses:
+        '200':
+          description: Credenciales creadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialResponse'
+        '400':
+          description: Error al crear credenciales
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/credentials/{merchantId}:
+    get:
+      tags:
+        - Credentials
+      summary: Obtener credenciales
+      description: Obtiene las credenciales de un merchant
+      operationId: getCredentialByMerchant
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      responses:
+        '200':
+          description: Credenciales del merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialResponse'
+        '404':
+          description: Credenciales no encontradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Credentials
+      summary: Actualizar credenciales
+      description: Actualiza las credenciales de un merchant
+      operationId: updateCredential
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCredentialRequest'
+      responses:
+        '200':
+          description: Credenciales actualizadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialResponse'
+        '400':
+          description: Error al actualizar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Credentials
+      summary: Eliminar credenciales
+      description: Elimina las credenciales de un merchant (soft delete)
+      operationId: deleteCredential
+      parameters:
+        - $ref: '#/components/parameters/MerchantId'
+      responses:
+        '200':
+          description: Credenciales eliminadas
+        '404':
+          description: Credenciales no encontradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API Key del merchant DEUNA
+
+    VtexApiKey:
+      type: apiKey
+      in: header
+      name: x-vtex-api-appkey
+      description: VTEX API Key
+
+    MerchantToken:
+      type: apiKey
+      in: header
+      name: x-merchant-token
+      description: Token del merchant
+
+  parameters:
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      description: ID del pago
+      schema:
+        type: string
+        format: uuid
+
+    MerchantId:
+      name: merchantId
+      in: path
+      required: true
+      description: ID del merchant
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    HealthcheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+
+    GetPaymentMethodsResponse:
+      type: object
+      properties:
+        paymentMethods:
+          type: array
+          items:
+            type: string
+          example:
+            - DeunaNow
+            - Promissories
+            - Visa
+            - Mastercard
+            - American Express
+            - Diners
+            - Discover
+            - JCB
+            - Elo
+            - Hipercard
+            - Maestro
+            - Mastercard Debit
+            - Visa Electron
+            - Pix
+
+    GetManifestResponse:
+      type: object
+      properties:
+        paymentMethods:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentMethod'
+        customFields:
+          type: array
+          items:
+            type: object
+        autoSettleDelay:
+          $ref: '#/components/schemas/AutoSettleDelay'
+
+    PaymentMethod:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Visa
+        allowsSplit:
+          type: string
+          enum: [disabled, enabled]
+          example: disabled
+
+    AutoSettleDelay:
+      type: object
+      properties:
+        minimum:
+          type: string
+          example: "0"
+        maximum:
+          type: string
+          example: "900"
+
+    CreatePaymentRequest:
+      type: object
+      required:
+        - paymentId
+        - orderId
+        - value
+        - currency
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+        transactionId:
+          type: string
+        reference:
+          type: string
+        value:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: BRL
+        installments:
+          type: integer
+        installmentsInterestRate:
+          type: number
+          format: double
+        installmentsValue:
+          type: number
+          format: double
+        deviceFingerprint:
+          type: string
+        ipAddress:
+          type: string
+        callbackUrl:
+          type: string
+          format: uri
+        returnUrl:
+          type: string
+          format: uri
+        inboundRequestsUrl:
+          type: string
+          format: uri
+        card:
+          $ref: '#/components/schemas/Card'
+        miniCart:
+          $ref: '#/components/schemas/MiniCart'
+        merchantSettings:
+          type: array
+          items:
+            $ref: '#/components/schemas/MerchantSetting'
+        orderForm:
+          $ref: '#/components/schemas/OrderForm'
+
+    CreatePaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [approved, denied, undefined]
+        tid:
+          type: string
+        authorizationId:
+          type: string
+        nsu:
+          type: string
+        acquirer:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        delayToAutoSettle:
+          type: integer
+        delayToAutoSettleAfterAntifraud:
+          type: integer
+        delayToCancel:
+          type: integer
+        paymentUrl:
+          type: string
+          format: uri
+
+    CancelPaymentRequest:
+      type: object
+      required:
+        - paymentId
+        - requestId
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+
+    CancelPaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        message:
+          type: string
+        code:
+          type: string
+        cancellationId:
+          type: string
+        requestId:
+          type: string
+
+    SettlePaymentRequest:
+      type: object
+      required:
+        - paymentId
+        - requestId
+        - value
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+        value:
+          type: number
+          format: double
+
+    SettlePaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        settleId:
+          type: string
+        value:
+          type: number
+          format: double
+        message:
+          type: string
+        code:
+          type: string
+        requestId:
+          type: string
+
+    RefundPaymentRequest:
+      type: object
+      required:
+        - paymentId
+        - requestId
+        - value
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+        value:
+          type: number
+          format: double
+
+    RefundPaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        refundId:
+          type: string
+        value:
+          type: number
+          format: float
+        message:
+          type: string
+        code:
+          type: string
+        requestId:
+          type: string
+
+    VtexCancelPaymentRequest:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        paymentId:
+          type: string
+        value:
+          type: number
+          format: double
+
+    VtexCancelPaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        paymentId:
+          type: string
+
+    NotifyPaymentRequest:
+      type: object
+      properties:
+        order:
+          $ref: '#/components/schemas/NotifyOrder'
+
+    NotifyOrder:
+      type: object
+      properties:
+        token:
+          type: string
+          format: uuid
+        merchantId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        payment:
+          type: object
+
+    NotifyPaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: succeeded
+        data:
+          type: object
+          properties:
+            orderId:
+              type: string
+        order:
+          type: object
+          properties:
+            orderId:
+              type: string
+        metadata:
+          type: object
+          properties:
+            checkoutAuthToken:
+              type: string
+            checkoutOrderAuthToken:
+              type: string
+
+    TransactionStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+
+    GetTransactionByOrderIdResponse:
+      type: object
+      properties:
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+
+    ApplyPromotionRequest:
+      type: object
+      required:
+        - orderToken
+      properties:
+        orderToken:
+          type: string
+          format: uuid
+        bin:
+          type: string
+          description: BIN de la tarjeta (6 dígitos)
+        installmentPlanOptionId:
+          type: string
+          format: uuid
+
+    ApplyPromotionResponse:
+      type: object
+      properties:
+        order:
+          $ref: '#/components/schemas/MerchantOrder'
+
+    GetMCIInstallmentsRequest:
+      type: object
+      required:
+        - merchantId
+        - transactionId
+      properties:
+        merchantId:
+          type: string
+          format: uuid
+        transactionId:
+          type: string
+        bin:
+          type: string
+        salesChannel:
+          type: string
+        paymentProcessors:
+          type: array
+          items:
+            type: string
+
+    GetMCIInstallmentsResponse:
+      type: object
+      properties:
+        installments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Installment'
+
+    Installment:
+      type: object
+      properties:
+        id:
+          type: string
+        count:
+          type: integer
+        hasInterestRate:
+          type: boolean
+        interestRate:
+          type: number
+          format: double
+        value:
+          type: integer
+        total:
+          type: integer
+
+    CreateCredentialRequest:
+      type: object
+      required:
+        - merchantId
+        - publicKey
+        - privateKey
+      properties:
+        merchantId:
+          type: string
+          format: uuid
+        publicKey:
+          type: string
+        privateKey:
+          type: string
+        externalAuthPublicKey:
+          type: string
+
+    UpdateCredentialRequest:
+      type: object
+      properties:
+        merchantId:
+          type: string
+          format: uuid
+        publicKey:
+          type: string
+        privateKey:
+          type: string
+        externalAuthPublicKey:
+          type: string
+
+    CredentialResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        merchantId:
+          type: string
+          format: uuid
+        publicKey:
+          type: string
+        privateKey:
+          type: string
+        externalAuthPublicKey:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Card:
+      type: object
+      properties:
+        holder:
+          type: string
+        number:
+          type: string
+        csc:
+          type: string
+        expiration:
+          $ref: '#/components/schemas/Expiration'
+        document:
+          type: string
+        token:
+          type: string
+
+    Expiration:
+      type: object
+      properties:
+        month:
+          type: string
+        year:
+          type: string
+
+    MiniCart:
+      type: object
+      properties:
+        buyer:
+          $ref: '#/components/schemas/Buyer'
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        shippingValue:
+          type: number
+          format: double
+        taxValue:
+          type: number
+          format: double
+
+    Buyer:
+      type: object
+      properties:
+        id:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        document:
+          type: string
+        documentType:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        isCorporate:
+          type: boolean
+        corporateName:
+          type: string
+        tradeName:
+          type: string
+        corporateDocument:
+          type: string
+
+    Address:
+      type: object
+      properties:
+        country:
+          type: string
+        street:
+          type: string
+        number:
+          type: string
+        complement:
+          type: string
+        neighborhood:
+          type: string
+        postalCode:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        quantity:
+          type: integer
+        discount:
+          type: number
+          format: double
+        deliveryType:
+          type: string
+        categoryId:
+          type: string
+        sellerId:
+          type: string
+        taxValue:
+          type: number
+          format: double
+        taxRate:
+          type: number
+          format: double
+
+    MerchantSetting:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+
+    OrderForm:
+      type: object
+      properties:
+        orderFormId:
+          type: string
+        salesChannel:
+          type: string
+        value:
+          type: integer
+        userProfileId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemOrderForm'
+        totalizers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Totalizer'
+        shippingData:
+          $ref: '#/components/schemas/ShippingData'
+        clientProfileData:
+          $ref: '#/components/schemas/ClientProfileData'
+        storePreferencesData:
+          $ref: '#/components/schemas/StorePreferencesData'
+        paymentData:
+          $ref: '#/components/schemas/CartPaymentData'
+        marketingData:
+          $ref: '#/components/schemas/CartMarketingData'
+
+    ItemOrderForm:
+      type: object
+      properties:
+        id:
+          type: string
+        ean:
+          type: string
+        name:
+          type: string
+        tax:
+          type: integer
+        price:
+          type: integer
+        listPrice:
+          type: integer
+        sellingPrice:
+          type: integer
+        quantity:
+          type: integer
+        imageUrl:
+          type: string
+          format: uri
+        detailUrl:
+          type: string
+        isGift:
+          type: boolean
+
+    Totalizer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        value:
+          type: integer
+
+    ShippingData:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/AddressOrderForm'
+        logisticsInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogisticsInfo'
+
+    AddressOrderForm:
+      type: object
+      properties:
+        addressType:
+          type: string
+        receiverName:
+          type: string
+        addressId:
+          type: string
+        postalCode:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        street:
+          type: string
+        number:
+          type: string
+        neighborhood:
+          type: string
+        complement:
+          type: string
+        geoCoordinates:
+          type: array
+          items:
+            type: number
+            format: double
+
+    LogisticsInfo:
+      type: object
+      properties:
+        itemIndex:
+          type: integer
+        selectedSla:
+          type: string
+        selectedDeliveryChannel:
+          type: string
+        addressId:
+          type: string
+        itemId:
+          type: string
+
+    ClientProfileData:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        document:
+          type: string
+        documentType:
+          type: string
+        phone:
+          type: string
+
+    StorePreferencesData:
+      type: object
+      properties:
+        countryCode:
+          type: string
+        currencyCode:
+          type: string
+        currencySymbol:
+          type: string
+
+    CartPaymentData:
+      type: object
+      properties:
+        updateStatus:
+          type: string
+        installmentOptions:
+          type: array
+          items:
+            type: object
+        payments:
+          type: array
+          items:
+            type: object
+        giftCards:
+          type: array
+          items:
+            $ref: '#/components/schemas/GiftCard'
+
+    CartMarketingData:
+      type: object
+      properties:
+        coupon:
+          type: string
+        marketingTags:
+          type: array
+          items:
+            type: string
+        utmSource:
+          type: string
+        utmMedium:
+          type: string
+        utmCampaign:
+          type: string
+
+    GiftCard:
+      type: object
+      properties:
+        redemptionCode:
+          type: string
+        provider:
+          type: string
+        value:
+          type: integer
+        balance:
+          type: integer
+        name:
+          type: string
+        id:
+          type: string
+        inUse:
+          type: boolean
+        isSpecialCard:
+          type: boolean
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        paymentId:
+          type: string
+        transactionId:
+          type: string
+        orderToken:
+          type: string
+          format: uuid
+        cartId:
+          type: string
+        reference:
+          type: string
+        paymentMethod:
+          type: string
+        merchantName:
+          type: string
+        value:
+          type: number
+          format: double
+        totalCartValue:
+          type: number
+          format: double
+        currency:
+          type: string
+        installments:
+          type: integer
+        merchantId:
+          type: string
+        vtexFlowType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MerchantOrder:
+      type: object
+      properties:
+        orderId:
+          type: string
+        orderToken:
+          type: string
+          format: uuid
+        status:
+          type: string
+        totalAmount:
+          type: number
+          format: double
+        currency:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Código de error interno
+        message:
+          type: string
+          description: Mensaje de error descriptivo
+        details:
+          type: object
+          description: Detalles adicionales del error

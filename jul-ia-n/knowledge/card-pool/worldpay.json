@@ -1,0 +1,23 @@
+{
+  "psp": "worldpay",
+  "cards": [
+    {
+      "variableName": "worldpayVisaCardSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "worldpayMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "worldpayVisaCardMPC",
+      "country": null,
+      "brand": "visa",
+      "notes": "manually triaged 2026-07-10: no explicit success/decline signal in the name, confirmed valid by user"
+    }
+  ]
+}

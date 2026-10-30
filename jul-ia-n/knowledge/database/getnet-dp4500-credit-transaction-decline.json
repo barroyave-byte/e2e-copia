@@ -1,0 +1,36 @@
+{
+  "id": "getnet-dp4500-credit-transaction-decline",
+  "title": "Getnet (BR) — DP-4500 'Error on credit transaction' decline on installment purchase/authorize flows, no fix on our side",
+  "symptom": "Purchase exitoso con MCI a 6 meses. Expected 200 but got 422 DP-4500 'Error on credit transaction'. Getnet is declining credit transactions with DP-4500. Validate that the order has been processed successfully with status code 200 and status order processed. Also purchase with MSI and authorize with MCI at 3 and 6 months (status order processed/authorized). Recurring Getnet-side credit decline across the installment suite.",
+  "testCaseIds": [
+    "PAYM-T2126",
+    "PAYM-T2127",
+    "PAYM-T2129",
+    "PAYM-T2132",
+    "PAYM-T2133"
+  ],
+  "rootCauseCategory": "psp_decline",
+  "tags": [
+    "@getnet",
+    "@team_payment_integration",
+    "DP-4500",
+    "credit",
+    "mci",
+    "msi",
+    "installments",
+    "decline",
+    "external-issue"
+  ],
+  "recipe": "NOT a fix — this is a known, recurring Getnet-side (PSP) credit decline confirmed external to DEUNA: Getnet returns HTTP 422 DP-4500 'Error on credit transaction' on installment credit purchase and authorize flows (3 and 6 months), so the order never reaches the expected 200/processed (or authorized) state. No code change on our side resolves it. Do NOT propose a diff, do not swap cards via cardFixer, do not relax the 200 assertion, do not escalate to serviceInvestigator. Mark the regression row as reviewed via the known-issue disposition (QA Review=OK, Root cause QA=External issue). Group leader is PAYM-T2079 (the other IDs dedup onto it). If Getnet starts approving these transactions and this stops recurring, this entry will simply stop matching (no manual deprecation needed) — re-open only if Getnet confirms a permanent fix and you want to retire the entry explicitly.",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-03",
+  "status": "active"
+}

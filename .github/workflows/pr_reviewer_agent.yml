@@ -1,0 +1,88 @@
+name: PR Reviewer Agent
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - '**'
+    paths:
+      - 'playwright/**/*.ts'
+
+# One live run per pull request. A new push cancels the in-flight review instead
+# of leaving two agents commenting on the same pull request.
+concurrency:
+  group: pr-reviewer-agent-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    name: Testing standard validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Full history is required: the agent diffs the base and head commits.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        # No browsers are installed: the agent performs static analysis only.
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run PR Reviewer Agent
+        id: agent
+        env:
+          # Not the default GITHUB_TOKEN: its viewerCanResolve is false on
+          # every review thread regardless of the `permissions:` block above,
+          # so reconcileThreads() in github.ts can never auto-resolve a fixed
+          # finding — confirmed empirically on sandbox PR #3612 (0 resolved
+          # across several pushes that genuinely fixed the flagged line).
+          # DUNA_ACTION_TOKEN (already used by action_push_ecr_dev.yml) does
+          # have write access to this repo and resolves threads correctly.
+          GITHUB_TOKEN: ${{ secrets.DUNA_ACTION_TOKEN }}
+          # The advisory pass uses OpenAI by default and falls back to Anthropic
+          # when it fails, so an exhausted balance on one provider does not cost
+          # the pull request its review.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Same variable used by zephyr_scale.yml and playwright/support/zephyr.
+          # When absent, the title comparison is skipped and the rest still runs.
+          ZEPHYR_ACCESS_TOKEN: ${{ secrets.ZEPHYR_ACCESS_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # Severity for new specs written against the legacy framework:
+          # error | warning | off. Kept at 'warning' during the DSL migration.
+          PR_AGENT_NEW_SPECS_REQUIRE_DSL: warning
+          # Pin a single provider with PR_AGENT_LLM_PROVIDER (anthropic | openai).
+          # Models: PR_AGENT_ANTHROPIC_MODEL / PR_AGENT_OPENAI_MODEL.
+        run: |
+          npx ts-node --project tsconfig.json \
+            -r tsconfig-paths/register \
+            scripts/pr-review-agent/index.ts \
+            --base "$PR_BASE_SHA" --head "$PR_HEAD_SHA"
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ "${{ steps.agent.outcome }}" = "success" ]; then
+            echo "### ✅ Testing standard: passed" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ❌ Testing standard: blocking findings" >> "$GITHUB_STEP_SUMMARY"
+            echo "See the agent inline comments on the pull request." >> "$GITHUB_STEP_SUMMARY"
+          fi

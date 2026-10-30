@@ -1,0 +1,46 @@
+// Auto-import all services to trigger decorator registration
+import './UserAuthService';
+import './PaymentService';
+import './MerchantAuthService';
+import './EmaService';
+import './CheckoutConfigurationService';
+import './PaymentMsiService';
+import './TransactionTraceService';
+import './PaymentRoutingService';
+import './PermitService';
+import './GuardService';
+import './FraudSettingsService';
+import './StatsigService';
+import './AsaasService';
+import './SubscriptionService';
+import './SettlementService';
+import './NavitaireService';
+import './SabreService';
+import './TelcelService';
+import './VtexMiddlewareService';
+import './WalletCredentialsService';
+import './FintocService';
+
+// Export all services for easy importing
+export { UserAuthService } from './UserAuthService';
+export { PaymentService } from './PaymentService';
+export { BaseService } from './BaseService';
+export { MerchantAuthService } from './MerchantAuthService';
+export { EmaService } from './EmaService';
+export { CheckoutConfigurationService } from './CheckoutConfigurationService';
+export { PaymentMsiService } from './PaymentMsiService';
+export { TransactionTraceService } from './TransactionTraceService';
+export { PaymentRoutingService } from './PaymentRoutingService';
+export { PermitService } from './PermitService';
+export { GuardService } from './GuardService';
+export { FraudSettingsService } from './FraudSettingsService';
+export { StatsigService } from './StatsigService';
+export { AsaasService } from './AsaasService';
+export { SubscriptionService } from './SubscriptionService';
+export { SettlementService } from './SettlementService';
+export { NavitaireService } from './NavitaireService';
+export { SabreService } from './SabreService';
+export { TelcelService } from './TelcelService';
+export { VtexMiddlewareService } from './VtexMiddlewareService';
+export { WalletCredentialsService } from './WalletCredentialsService';
+export { FintocService } from './FintocService';

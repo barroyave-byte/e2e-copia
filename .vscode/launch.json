@@ -1,0 +1,193 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Playwright: Debug file (chromium)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "${relativeFile}",
+        "--project=chromium",
+        "--headed",
+        "--retries=0",
+        "--timeout=0"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Playwright: Run file headed (VSCode breakpoints)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "${relativeFile}",
+        "--project=chromium",
+        "--headed",
+        "--retries=0",
+        "--timeout=0"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Playwright: Run file + open HTML report",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "${relativeFile}",
+        "--project=chromium",
+        "--headed",
+        "--retries=0",
+        "--timeout=0",
+        "--reporter=html"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "PW_TEST_HTML_REPORT_OPEN": "always"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Playwright: Debug folder (chromium)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "${input:pwFolder}",
+        "--project=chromium",
+        "--headed",
+        "--debug",
+        "--retries=0",
+        "--timeout=0"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "PWDEBUG": "1"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Playwright: Debug by grep (chromium)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "--project=chromium",
+        "--headed",
+        "--debug",
+        "--retries=0",
+        "--timeout=0",
+        "--grep",
+        "${input:pwGrep}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "PWDEBUG": "1"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Playwright: Debug all (chromium)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "--project=chromium",
+        "--headed",
+        "--debug",
+        "--retries=0",
+        "--timeout=0"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "PWDEBUG": "1"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Playwright: Debug visual-testing",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "--project=visual-testing",
+        "--retries=0",
+        "--timeout=0"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Playwright: Debug preprod (only_preprod)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v22.20.0/bin/node",
+      "program": "${workspaceFolder}/node_modules/@playwright/test/cli.js",
+      "args": [
+        "test",
+        "--config=playwright.preprod.config.ts",
+        "--project=only_preprod",
+        "--retries=0"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "pwGrep",
+      "type": "promptString",
+      "description": "Pattern para --grep (e.g. @regression o nombre del test)",
+      "default": "@regression"
+    },
+    {
+      "id": "pwFolder",
+      "type": "promptString",
+      "description": "Carpeta relativa al workspace a ejecutar (ej: playwright/tests/PSP/ebanx)",
+      "default": "playwright/tests"
+    }
+  ]
+}
+

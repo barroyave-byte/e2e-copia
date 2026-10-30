@@ -1,0 +1,90 @@
+## General
+node_modules/
+videos/
+screenshots/
+test-to-json/
+jsonlogs/
+logs/
+reports/
+blob-**/
+
+# The `logs/` rule above targets runtime log output; keep the admin "logs"
+# module source (page objects and specs) tracked.
+!playwright/pages/admin/logs/
+!playwright/tests/teams/admin/logs/
+
+# Excluir todos los archivos .env
+.env*
+!.env.template
+!.env.staging
+!.env.develop
+!.env.preprod
+!jul-ia-n/infra/langfuse/.env.example
+
+# Archivos específicos de macOS
+.DS_Store
+.zshrc
+
+# Carpetas y archivos específicos de IDE
+.idea/*
+
+# Secretos generados
+secrets*.json
+
+## Cypress
+.cypress-cucumber-preprocessorrc.json
+# Local Cypress fixtures may be copied here as migration/reference material.
+/cypress/
+
+## Playwright
+playwright/test-results/
+test-results
+@rerun.txt
+playwright-report**
+playwright/newman-test-results
+
+# Mercado Pago screenshots (legacy - now handled by testInfo.attach)
+mp-*.png
+
+#scripts temporales
+test_case_ids.csv
+playwright/.auth
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Payconnect testing hub files
+playwright.processors.temp.config.ts
+testCasesConfig.json
+executionConfig.json
+
+# makefile
+Makefile.local
+
+# a local log file
+result.log
+
+## Mise
+.mise/
+.mise.toml
+
+
+## Jul-ia-n
+jul-ia-n/output.md
+jul-ia-n/*.json
+jul-ia-n/*.csv
+jul-ia-n/telemetry/runs/
+jul-ia-n/knowledge/psp-card-fallbacks.json
+
+api-coverage-report.json
+
+#blob reports
+/blob-execution-initial
+/blob-retry
+
+#debug registries
+/playwright/.debug/
+
+# Local network captures may contain merchant credentials.
+/tmp/

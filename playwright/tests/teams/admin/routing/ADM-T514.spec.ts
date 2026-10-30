@@ -1,0 +1,88 @@
+import { test } from '@support/fixtures';
+import * as processorsConfig from '@support/interfaces/payment_processors';
+import { AdminHomePage } from '@pages/admin/adminHomePage';
+import { AdminLoginPage } from '@pages/admin/adminLoginPage';
+import { AdminConnectionsPage } from '@pages/admin/connections/adminConnectionsPage';
+import ConfigMerchant from '@support/api_sup/config_merchant_sup/configMerchant';
+import { ConnectionsAvailable } from '@support/interfaces/connectionsAvailable';
+import { AdminPaymentStrategyPage } from '@pages/admin/adminPaymentStrategyPage';
+
+const configMerchant = new ConfigMerchant();
+
+test.describe('@regression Routing csv for Void Transactions', () => {
+  let merchantId: string;
+  let merchantName: string;
+  let privateKey: string;
+  let orderToken: string;
+  let orderId: string;
+
+  test.beforeAll(async ({ emaService }) => {
+    const merchant = await configMerchant.basicSetup('MX');
+    merchantId = merchant.merchantId;
+    merchantName = merchant.merchantName;
+    privateKey = merchant.privateKey;
+    const tokenized = await emaService.tokenizeDeunaNowOrder('MX', privateKey);
+    orderToken = tokenized.data.token;
+    orderId = tokenized.data.order.order_id;
+  });
+
+  test(
+    '@ADM-T514 Routing CSV ingreso carga CSV',
+    {
+      tag: [
+        '@fixme_preprod',
+        '@admin',
+        '@admin_connection',
+        '@smoke',
+        '@admin-preprod',
+        '@team_admin',
+        '@admin_smoke',
+      ],
+    },
+    async ({ page }) => {
+      const adminHomePage = new AdminHomePage(page);
+      const adminLoginPage = new AdminLoginPage(page);
+      const adminConnectionsPage = new AdminConnectionsPage(page);
+      const adminPaymentStrategyPage = new AdminPaymentStrategyPage(page, 'ES');
+
+      await test.step('The user opens the admin page and set merchant id session', async () => {
+        await adminLoginPage.gotoAdmin();
+        await adminHomePage.setMerchantIdSessionStorage(merchantId);
+      });
+      await test.step('The user goes to connections', async () => {
+        await adminHomePage.goToConnections();
+      });
+
+      await test.step('The user configure Kushki connection', async () => {
+        await adminConnectionsPage.configureConnection(
+          ConnectionsAvailable.kushki,
+          processorsConfig.kushkiProcessorAuthorize
+        );
+      });
+      await test.step('The user goes to the payment strategies page', async () => {
+        await adminHomePage.goToPaymentStrategy();
+      });
+      await test.step('The user goes to create specific rule page', async () => {
+        await adminPaymentStrategyPage.createSpecificRule();
+      });
+      await test.step('Assign Name', async () => {
+        await adminPaymentStrategyPage.firstStepSpecificRule();
+      });
+      await test.step('Add condition', async () => {
+        await adminPaymentStrategyPage.addConditionStepSpecificRule();
+      });
+      await test.step('User create email list', async () => {
+        await adminPaymentStrategyPage.addConditionCSVEmailList();
+      });
+      await test.step('routing and save the rule', async () => {
+        await adminPaymentStrategyPage.nextStepRouting();
+        await adminPaymentStrategyPage.selectDefaultPaymentEngine(ConnectionsAvailable.kushki);
+        await adminPaymentStrategyPage.saveRule();
+      });
+
+      await await test.step('validate rule created', async () => {
+        await adminPaymentStrategyPage.validateRuleCreated();
+      });
+    }
+  );
+});

@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-10-29T23:16:09.585Z",
+  "schema_version": "2",
+  "total": 3,
+  "tests": [
+    {
+      "id": "PF-T127",
+      "file": "api_guard/PF-T127.spec.ts",
+      "ihub_tag": "@i-hub-global",
+      "tags": [
+        "@regression",
+        "@PF-T127",
+        "@fraud",
+        "@admin-preprod",
+        "@team_payments_capabilities",
+        "@i-hub-global"
+      ],
+      "title": "Purchase with upper case billing address name function for Cybersource fraud provider"
+    },
+    {
+      "id": "PF-T134",
+      "file": "api_guard/PF-T134.spec.ts",
+      "ihub_tag": "@i-hub-global",
+      "tags": [
+        "@regression",
+        "@PF-T134",
+        "@i-hub-global",
+        "@admin_connection",
+        "@admin-preprod",
+        "@team_payments_capabilities",
+        "@preprod",
+        "@authorization"
+      ],
+      "title": "Purchase with billing address 2 - Signifyd Post authorization"
+    },
+    {
+      "id": "PI-T1911",
+      "file": "api_guard/PI-T1911.spec.ts",
+      "ihub_tag": "@i-hub-stripe",
+      "tags": [
+        "@regression",
+        "@PI-T1911",
+        "@fraud",
+        "@admin_connection",
+        "@admin-preprod",
+        "@team_payments_capabilities",
+        "@api",
+        "@i-hub-stripe"
+      ],
+      "title": "Verificación de credenciales en la solicitud al proveedor sift"
+    }
+  ]
+}

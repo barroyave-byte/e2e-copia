@@ -1,0 +1,17 @@
+{
+  "psp": "conekta",
+  "cards": [
+    {
+      "variableName": "conektaMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "conektaVisaCardSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "wompi-direct-pyc40001-validating-status-decline",
+  "title": "Wompi Direct — PYC-40001 'validating status' indeterminate decline (HTTP 500) blocking capture flows, no fix on our side",
+  "symptom": "Captura a orden autorizada. Expected 200 but got 500 with PYC-40001 validating-status decline. Wompi Direct integration is returning an indeterminate 'validating status' decline, blocking capture flow setup. Fails validating that the order has been processed successfully with status code 200 and status order authorized. Also hits capture-error and over-capture scenario setups. Confirmed external to DEUNA: Wompi's side, not a code bug.",
+  "testCaseIds": [
+    "ENTP1-T1883",
+    "ENTP1-T1885",
+    "ENTP1-T1886"
+  ],
+  "rootCauseCategory": "psp_decline",
+  "tags": [
+    "@wompi",
+    "@team_payment_integration",
+    "PYC-40001",
+    "validating-status",
+    "capture",
+    "decline",
+    "external-issue"
+  ],
+  "recipe": "NOT a fix — this is a known, recurring Wompi Direct-side (PSP) failure confirmed external to DEUNA: Wompi returns an indeterminate PYC-40001 'validating status' decline (HTTP 500) on the authorize/setup step, so the order never reaches the expected 200/authorized state and every downstream capture scenario (capture on authorized, capture-error, over-capture) fails at setup. No code change on our side resolves it. Do NOT propose a diff, do not relax the 200/authorized assertion, do not swap cards via cardFixer, do not escalate to serviceInvestigator. Mark the regression row as reviewed via the known-issue disposition (QA Review=OK, Root cause QA=External issue) so devs don't re-triage a case that's already understood. If Wompi's validation stabilizes and this stops recurring, this entry will simply stop matching (no manual deprecation needed) — re-open only if Wompi confirms a permanent fix and you want to retire the entry explicitly.",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-03",
+  "status": "active"
+}

@@ -1,0 +1,481 @@
+Test Case ID,Test Description,Team Owner,Error Identified,Root Cause,Root Cause Category (ONLY QA),AI - Proposed solution,Failed Step,owner,Evidence by team of the fix or that it does not apply and why ,Dev Solution,Dev Solution,QA Review,Root cause QA,Comments QA,Recurrencia,Se requiere Revisión de:,INDEX_FOR_NOTION,,,,,,,,QA Review (Base),Root cause QA (Base),Comments QA (Base),Validation
+PAYM-T2076,Purchase exitoso VISA,team_payment_integration,Getnet returned DP-4500 with a declined credit transaction.,The Getnet credit-card purchase was declined by the PSP.,psp_decline,"Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi…",The user send purchase request,Julian David Mora Ramos,PAYM-T2076,This error must be reviewed by the backend team.,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2079,Authorize exitoso Mastercard,team_payment_integration,Getnet returned DP-4500 with an error on the credit transaction.,The Getnet credit-card transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",The user send purchase request,Julian David Mora Ramos,PAYM-T2079,This error must be reviewed by the backend team.,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2080,Authorize exitoso VISA,team_payment_integration,Getnet returned DP-4500 with an error on the credit transaction.,The Getnet credit-card transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",The user send purchase request,Julian David Mora Ramos,PAYM-T2080,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2112,Capture exitoso monto completo,team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet credit-card transaction was declined before capture could begin.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",It is validated that the order has been processed successfully with status authorized,Julian David Mora Ramos,PAYM-T2112,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2113,Capture exitoso monto parcial,team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet credit-card transaction was declined before partial capture could begin.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",It is validated that the order has been processed successfully with status authorized,Julian David Mora Ramos,PAYM-T2113,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2114,Capture exitoso rechazada por monto mayor,team_payment_integration,Getnet returned DP-4500 with a declined credit transaction.,The Getnet purchase was declined before the over-amount capture scenario could be tested.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",The user send purchase request,Julian David Mora Ramos,PAYM-T2114,This error must be reviewed by the backend team.,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2132,Authorize exitoso con MCI a 3 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""authorized""",Julian David Mora Ramos,PAYM-T2132,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2133,Authorize exitoso con MCI a 6 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""authorized""",Julian David Mora Ramos,PAYM-T2133,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2127,Purchase exitoso con MCI a 6 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""processed""",Julian David Mora Ramos,PAYM-T2127,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2129,Purchase exitoso con MCI a 3 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""processed""",Julian David Mora Ramos,PAYM-T2129,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2130,Authorize exitoso con MSI a 3 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""authorized""",Julian David Mora Ramos,PAYM-T2130,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2131,Authorize exitoso con MSI a 6 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""authorized""",Diego Fernando Avila Pava,,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2126,Purchase exitoso con MSI a 3 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""processed""",,,,Ready,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+PAYM-T2128,Purchase exitoso con MSI a 6 meses,team_payment_integration,Getnet returned DP-4500 and declined the credit transaction.,The Getnet installment credit transaction was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.","Validate that the order has been processed successfully with status code ""200"" and status order ""processed""",Diego Fernando Avila Pava,,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2077,Purchase exitoso Mastercard,team_payment_integration,Getnet returned DP-4500 with a declined credit transaction.,The Getnet credit-card purchase was declined by the PSP.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",The user send purchase request,Diego Fernando Avila Pava,,This error must be reviewed by the backend team.,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2117,Refund for full amount tested,team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet transaction was declined before the refund scenario could be exercised.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",The user send purchase request,Diego Fernando Avila Pava,,This error must be reviewed by the backend team.,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2125,Test that trying to refund after the transaction it has been cancelled fails,team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet transaction was declined before the cancelled-refund scenario could be exercised.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",The user send purchase request,Diego Fernando Avila Pava,,This error must be reviewed by the backend team.,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2121,Test that an authorization only can be cancelled,team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet transaction was declined before authorization cancellation could be tested.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",It is validated that the order has been processed successfully with status authorized,Diego Fernando Avila Pava,,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2122,Test that a purchase cannot be cancelled (only refunded),team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet transaction was declined before the cancellation restriction could be tested.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",The user send purchase request,Diego Fernando Avila Pava,,This error must be reviewed by the backend team.,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PAYM-T2123,Test that an authorization only once captured cannot be cancelled (only refunded),team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet transaction was declined before the captured-authorization restriction could be tested.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",It is validated that the order has been processed successfully with status authorized,Diego Fernando Avila Pava,,,Ready,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,ok
+PAYM-T2124,Test that authorization only once cancelled cannot be captured,team_payment_integration,Getnet returned DP-4500 and declined the prerequisite purchase.,The Getnet transaction was declined before the cancelled-authorization capture scenario could be tested.,psp_decline,"Duplicate of PAYM-T2076. Leader: Insufficient signal for auto-fix — AI analysis: Most likely cause is an external Getnet PSP credit-transaction decline: the purchase endpoint returned HTTP 422 with Getnet/processor code DP-4500 / 400 before an order transaction ID was created, while guest authentication succeeded (HTTP 200). This matches the known recurring Getnet decline pattern, but the available evidence does not identify whether this is a transient PSP outage, merchant configuration issue, or test-card-specific rejection.
+
+- Check Getnet and payment-orchestrator logs usi… Apply same fix if applicable.",It is validated that the order has been processed successfully with status authorized,Diego Fernando Avila Pava,,,Ready,OK,External issue,"""status_code"": 400,
+  ""body"": {
+    ""message"": ""Error on credit transaction."",
+    ""name"": ""GetnetTransactionError"",
+    ""status_code"": 400,
+    ""details"": [
+      {
+        ""status"": ""DENIED"",
+        ""error_code"": ""PAYMENTS-999"",
+        ""description"": ""Unprocessed transaction."",
+        ""description_detail"": ""Gateway Timeout"",
+        ""payment_id"": ""c6d6b169-4c4f-4225-877f-69a88ebeab65"",
+        ""acquirer_transaction_id"": ""000000000000"",
+        ""authorization_code"": ""000000"",
+        ""transaction_id"": ""-1"",
+        ""reason_code"": ""504""
+      }
+    ]
+  },",,,,,,,,,,,,,,
+PI-T1771,(1.0) Purchase exitoso con Fiserv usando el API para MX,team_payment_integration,Fiserv returned DP-8001 and declined the card because it was temporarily blocked.,"The Fiserv card was blocked by the issuer, causing the purchase to be declined.",psp_decline,"cardFixer tried 2 card(s) this run, none passed verification: fiservARVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined); adyenVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review.",The user send purchase request,Diego Fernando Avila Pava,,This error must be reviewed by the backend team.,,OK,Environment issue,se hace retest y funciona,.,,,,,,,,,,,,,
+PI-T1781,(1.0) Authorize Exitoso con Fiserv usando el API para MX,team_payment_integration,Fiserv returned DP-8001 and declined the card because it was temporarily blocked.,"The Fiserv card was blocked by the issuer, causing authorization to be declined.",psp_decline,"Duplicate of PI-T1771. Leader: cardFixer tried 2 card(s) this run, none passed verification: fiservARVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined); adyenVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review. Apply same fix if applicable.",The user send purchase request,Diego Fernando Avila Pava,,,,OK,Environment issue,se hace retest y funciona,.,,,,,,,,,,QA review,Environment issue,QA-4478 Environment issue,ok
+PI-T1784,(1.0) Captura Total Exitoso con Fiserv usando el API para MX,team_payment_integration,Fiserv returned DP-8001 and declined the card because it was temporarily blocked.,"The Fiserv card was blocked by the issuer, preventing the prerequisite authorization.",psp_decline,"Duplicate of PI-T1771. Leader: cardFixer tried 2 card(s) this run, none passed verification: fiservARVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined); adyenVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review. Apply same fix if applicable.",The user send purchase request,Hugo Flotts,,This error must be reviewed by the backend team.,,OK,Environment issue,se hace retest y funciona,.,,,,,,,,,,,,,
+PI-T1786,(1.0) Void Exitoso con Fiserv usando el API para MX a una transaccion autorizada,team_payment_integration,Fiserv returned DP-8001 and declined the card because it was temporarily blocked.,"The Fiserv card was blocked by the issuer, preventing the prerequisite authorization for void.",psp_decline,"Duplicate of PI-T1771. Leader: cardFixer tried 2 card(s) this run, none passed verification: fiservARVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined); adyenVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-8001"",""description"":""Payment was declined). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review. Apply same fix if applicable.",The user send purchase request,Hugo Flotts,,This error must be reviewed by the backend team.,,OK,Environment issue,se hace retest y funciona,.,,,,,,,,,,,,,
+PI-T1897,Actualizar merchant profile Signifyd,team_payments_capabilities,Purchase returned DP-5004 because the fraud processor evaluation failed.,"The Signifyd fraud integration cannot evaluate the purchase, so the order is rejected before processing.",psp_decline,"cardFixer tried 2 card(s) this run, none passed verification: stripeVisaSuccessful (failed: Error: purchase status is incorrect. Response body: 
+{
+  ""data"": null,
+  ""error""); stripeMastercardSuccessful (failed: Error: purchase status is incorrect. Response body: 
+{
+  ""data"": null,
+  ""error""). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review.",It is validated that the order has been processed successfully with status processed,,,,,OK,PI validation is required,Deuda técnica  PI-6217,,,,,,,,,,,Pending PI,Guard validation is required,Deuda técnica  PI-6217,
+PI-T1900,Procesar una transacción con motor de fraude Signifyd low risk,team_payments_capabilities,Purchase V2 returned DP-5004 while evaluating the fraud processor.,The Signifyd fraud integration fails during risk evaluation and prevents the purchase from completing.,psp_decline,"Duplicate of PI-T1897. Leader: cardFixer tried 2 card(s) this run, none passed verification: stripeVisaSuccessful (failed: Error: purchase status is incorrect. Response body: 
+{
+  ""data"": null,
+  ""error""); stripeMastercardSuccessful (failed: Error: purchase status is incorrect. Response body: 
+{
+  ""data"": null,
+  ""error""). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review. Apply same fix if applicable.",The user send purchase request,,,This error must be reviewed by the backend team.,,OK,Credentials error,QA needs to request credenctials,,,,,,,,,,,Pending PI,Guard validation is required,Deuda técnica  PI-6217,
+ENTP1-T2453,Asaas PIX - Payment Widget: Successful purchase,team_enterprise,The purchase request returned HTTP 422 instead of HTTP 200.,The Asaas PIX purchase integration rejected the payment request without exposing a more specific error.,psp_decline,"AI analysis (cardFixer): I read `playwright/tests/bank_transfer/asaas_pix/ENTP1-T2453.spec.ts` and it contains no card import, card fixture, or card reference to replace: it configures `processorsConfig.asaasPixProcessor` and pays through the `asaas_pix` bank-transfer tab. The HTTP 422 is therefore not actionable by swapping any identifier from the supplied card pool; a human should investigate the Asaas PIX processor configuration/request or obtain a valid PIX-specific sandbox remedy.",Should click on Pay button,,,,,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+ENTP1-T2454,Asaas PIX - Payment Widget: Expired purchase,team_enterprise,The purchase request returned HTTP 422 instead of HTTP 200.,The Asaas PIX purchase integration rejected the payment request before the expiration flow could be validated.,psp_decline,"Duplicate of ENTP1-T2453. Leader: AI analysis (cardFixer): I read `playwright/tests/bank_transfer/asaas_pix/ENTP1-T2453.spec.ts` and it contains no card import, card fixture, or card reference to replace: it configures `processorsConfig.asaasPixProcessor` and pays through the `asaas_pix` bank-transfer tab. The HTTP 422 is therefore not actionable by swapping any identifier from the supplied card pool; a human should investigate the Asaas PIX processor configuration/request or obtain a valid PIX-specific sandbox remedy. Apply same fix if applicable.",Should click on Pay button,,,,,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+PAYM-T2190,Purchase using a card tokenized (payment vault) american express - Cybersource - Peru,team_payment_integration,The Cybersource vault purchase request returned HTTP 422 instead of HTTP 200.,The Cybersource vaulted-card purchase was rejected by the PSP integration.,psp_decline,"cardFixer tried 1 card(s) this run, none passed verification: adyenVisaSuccessful (failed: Error: purchase v2 request status
+
+[2mexpect([22m[31mreceived[39m[2m).[22m). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review.",It is validated that the card and purchase V2 request is sent,,,,,OK,PI validation is required,"Se agregará a deuda tecnica, ticket pendiente por crear",,,,,,,,,,,,,,
+PI-T1261,Purchase exitoso Visa con Cybersource usando vault en Peru,team_payment_integration,The Cybersource vault purchase request returned HTTP 422 instead of HTTP 200.,The Cybersource vaulted-card purchase was rejected by the PSP integration.,psp_decline,"Duplicate of PAYM-T2190. Leader: cardFixer tried 1 card(s) this run, none passed verification: adyenVisaSuccessful (failed: Error: purchase v2 request status
+
+[2mexpect([22m[31mreceived[39m[2m).[22m). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review. Apply same fix if applicable.",It is validated that the card and purchase V2 request is sent,,,,,OK,PI validation is required,"Se agregará a deuda tecnica, ticket pendiente por crear",,,,,,,,,,,,,,
+PAYM-T1841,Authorize installments 6 meses - MercadoPago usuario invitado- DEUNA NOW,team_payment_integration,MercadoPago returned DP-4200 because the users involved were invalid.,The MercadoPago payment used an invalid buyer or seller user configuration.,psp_decline,"cardFixer tried 2 card(s) this run, none passed verification: mercadopagoMasterCardSuccessful (failed: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[2); mercadoPagoVisaCardSuccessful (failed: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[2). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review.","It is validated that the status of the order is authorized, the number of installments and the type of installments",Diego Fernando Avila Pava,PAYM-1841,,Ready,OK,Tests case updated,Se actualiza el email y funciona,,,,,,,,,,,,,,
+PAYM-T801,Purchase installments 6 meses - MercadoPago usuario invitado- DEUNA NOW,team_payment_integration,MercadoPago returned DP-4200 because the users involved were invalid.,The MercadoPago payment used an invalid buyer or seller user configuration.,psp_decline,"Duplicate of PAYM-T1841. Leader: cardFixer tried 2 card(s) this run, none passed verification: mercadopagoMasterCardSuccessful (failed: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[2); mercadoPagoVisaCardSuccessful (failed: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[2). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review. Apply same fix if applicable.","It is validated that the status of the order is processed, the number of installments and the type of installments",Diego Fernando Avila Pava,PAYM-T801,,Ready,OK,Tests case updated,Se actualiza el email y funciona,,,,,,,,,,,,,,
+PI-T1351,Partial Refund por monto menor - Mall Transaction,team_payment_integration,Transbank mall refund failed with DP-6008 and HTTP 422.,The Transbank mall transaction could not be partially refunded.,psp_decline,"Known external/PSP issue (similarity 0.96) — recurring failure with no fix on our side. Marked ""OK"" / ""External issue"" per knowledge base.",The transaction is partially refunded,,,This error must be reviewed by the backend team.,,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+PI-T671,Partial Refund por monto menor,team_payment_integration,Transbank refund failed with DP-6008 and HTTP 422.,The Transbank transaction could not be partially refunded.,psp_decline,"Known external/PSP issue (similarity 0.96) — recurring failure with no fix on our side. Marked ""OK"" / ""External issue"" per knowledge base.",The transaction is partially refunded,,,This error must be reviewed by the backend team.,,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+ENTP1-T2429,PaymentWidget: Safetypay Direct,team_enterprise,The SafetyPay tab was not visible inside the payment widget iframe.,The payment widget failed to render the SafetyPay payment method.,ui_element_missing,"AI analysis (selectorFixer): `PaymentPage.clickOnSafetypayTab()` owns the timed-out locator in `playwright/pages/checkout/payment/paymentPage.ts`; it already tries both the legacy `id` and migration `datatestid` forms inside `iframe.zoid-visible`. The failure snapshot shows the widget's card form but contains no SafetyPay tab, so this is not a selector rename or iframe-boundary change. I also checked the only other checkout call site (`ENTP1-T2430`) and its payment-link page object uses the same two selector variants; provi…",The user clicks on safetypay tab,,,,,OK,PAYM validation is required,,,,,,,,,,,,,,,
+ENTP1-T2430,PaymentLink: Safetypay Direct,team_enterprise,The SafetyPay voucher tab was not visible.,The checkout failed to render the SafetyPay payment method.,ui_element_missing,"Duplicate of ENTP1-T2429. Leader: AI analysis (selectorFixer): `PaymentPage.clickOnSafetypayTab()` owns the timed-out locator in `playwright/pages/checkout/payment/paymentPage.ts`; it already tries both the legacy `id` and migration `datatestid` forms inside `iframe.zoid-visible`. The failure snapshot shows the widget's card form but contains no SafetyPay tab, so this is not a selector rename or iframe-boundary change. I also checked the only other checkout call site (`ENTP1-T2430`) and its payment-link page object uses the same two selector variants; provi… Apply same fix if applicable.",When guest user initiates payment with Safetypay,,,,,OK,PAYM validation is required,,,,,,,,,,,,,,,
+ENTP1-T2413,Elements: Test de Regresión Visual de Split Payments (Flujo Happy Path),team_enterprise,The expected visual snapshot file does not exist.,The split-payment visual test lacks its required baseline snapshot.,visual_regression,"Skipped: orchestrator confidence 0.50 below threshold 0.80. The classifier identifies visual_regression, and the DOM error explicitly states that the required reference snapshot files for ENTP1-T2413 do not exist and Playwright is writing actual images. The spec is under the vault visual project and all shown API/browser calls returned 200, with no evidence of a service failure; route to update/add the missing E2E visual baselines. Confidence is capped at 0.5 for visual-regression cases.",Verify order information,,,,,OK,Environment issue,se hace retest y funciona,,,,,,,,,,,,,,
+ENTP1-T2466,Custom styles - Validar textos en español - Guest - Split Payment,team_enterprise,The expected split-payment visual snapshot file does not exist.,The split-payment custom-styles test lacks its required baseline snapshot.,visual_regression,"Duplicate of ENTP1-T2413. Leader: Skipped: orchestrator confidence 0.50 below threshold 0.80. The classifier identifies visual_regression, and the DOM error explicitly states that the required reference snapshot files for ENTP1-T2413 do not exist and Playwright is writing actual images. The spec is under the vault visual project and all shown API/browser calls returned 200, with no evidence of a service failure; route to update/add the missing E2E visual baselines. Confidence is capped at 0.5 for visual-regression cases. Apply same fix if applicable.",Fill second card amount,,,,,OK,Environment issue,se hace retest y funciona,.,,,,,,,,,,QA review,Environment issue,QA-4478 Environment issue,
+ENTP1-T2416,Close widget with cancel button,team_enterprise,The purchase request returned HTTP 422 instead of HTTP 200.,The STP Codi purchase was rejected before the cancel-button flow could proceed.,assertion_mismatch,"Skipped: orchestrator confidence 0.72 below threshold 0.80. The classifier identifies assertion_mismatch: the purchase-status assertion expected HTTP 200 but received HTTP 422 before the cancel-button flow proceeded. No CloudWatch evidence identifies a service-side unexpected value, and the trace’s repeated checkout-config/user 404s do not concretely establish the cause of the purchase rejection, so the default assertion-mismatch e2e route is retained.",Should click on pay button,,,,,OK,PI validation is required,Deuda técnica  PF-3806,,,,,,,,,,,Pending PI,Recurrent,Deuda técnica  PF-3806,
+ENTP1-T2417,Go back to available payment methods with cancel button,team_enterprise,The purchase request returned HTTP 422 instead of HTTP 200.,The STP Codi purchase was rejected before the cancel-button flow could proceed.,assertion_mismatch,"Duplicate of ENTP1-T2416. Leader: Skipped: orchestrator confidence 0.72 below threshold 0.80. The classifier identifies assertion_mismatch: the purchase-status assertion expected HTTP 200 but received HTTP 422 before the cancel-button flow proceeded. No CloudWatch evidence identifies a service-side unexpected value, and the trace’s repeated checkout-config/user 404s do not concretely establish the cause of the purchase rejection, so the default assertion-mismatch e2e route is retained. Apply same fix if applicable.",Should click on pay button,,,,,OK,PI validation is required,Deuda técnica  PF-3806,,,,,,,,,,,Pending PI,Recurrent,Deuda técnica  PF-3806,
+PI-T2132,Purchases existosos con plan de installments consolidado con dos credenciales del mismo PSP - utilizando dynamic routing para la seleccion de cada uno de los PSPs,team_payments_capabilities,The payment card input inside the checkout iframe was not visible after waiting 115 seconds.,The dynamic-routing checkout did not render the card-entry widget for the selected PSP.,ui_element_missing,"AI analysis (selectorFixer): I inspected `playwright/pages/deuna_now/deunaNowPage.ts`: `fillCreditCardDataDeunaNow` waits for the new-card number field, while the snapshot shows the second checkout is instead in the saved-card flow (`**** 4242`, CVV, and `Agregar una tarjeta`), so that field is genuinely absent rather than renamed. The related POM already exposes `selectOptionAddNewCreditCard`; adding that call immediately before the second `fillCreditCardDataDeunaNow` in `playwright/tests/dynamic_routing/PI-T2132.spec.ts` …",Make purchase with second metadata value,Hugo Flotts,PI-T2132,,Flaky,OK,Tests case updated,se hace retest y funciona,,,,,,,,,,,QA review,Environment issue,QA-4478 Environment issue,Retest
+PF-T182,Purchase with fraud shadow mode - one post-auth main provider and shadow provider - one pre-auth shadow,team_payconnect,The fraud evaluation status was empty instead of pending_risk.,Fraud shadow-mode evaluation did not persist or expose the expected pending_risk status.,assertion_mismatch,"Skipped: orchestrator confidence 0.78 below threshold 0.80. Although classified as assertion_mismatch, the assertion received an empty fraud status while test setup logged two routing provisioning failures: HTTP 400 PAYROU-01000 states processors 40 and 49 are not available for merchant 8c4a3bfc-811f-40dc-93ac-bfd51e9b6f7d. This indicates a setup/provisioning dependency may have prevented the intended shadow-provider configuration, rather than a simple expected-value assertion issue; this class is routed to human triage.",It is validated that the order was evaluated by the main and shadow providers,Hugo Flotts,,,,OK,Environment issue,se hace retest y funciona,.,,,,,,,,,,,,,
+PI-T2161,(1.0) MPC Offline final for flag Paypal,team_unknown,The authorization response contained a timestamp instead of a falsy value.,The PayPal MPC offline authorization state contains an unexpected authorization timestamp.,assertion_mismatch,"AI analysis (assertFixer): `PI-T2161.spec.ts` explicitly asserts `invoice.verify_at` is falsy at the initial pending authorization (line 141) and throughout the subsequent wallet/MPC lifecycle (lines 179, 220, 264, and 303). The invoice helper only maps this value directly from the invoice query’s `element[14]` (`apiCallNewman.ts:1309`) and contains no documented derivation or processor-specific exception; meanwhile the configured processor is offline MPC with `automatic_capture: false` and a pending expiration (`paypalWa…",Authorize,,,,,OK,PI validation is required,Deuda técnica  PF-3806,,,,,,,,,,,Pending PI,Recurrent,Deuda técnica  PF-3806,
+ENTP1-T2558,Astropay Offline AR,team_enterprise,The expected Astropay processing message was not visible in the checkout iframe.,The Astropay offline checkout did not render its payment-processing state.,ui_element_missing,"AI analysis (selectorFixer): `AstropayPage.assertLabelProcessingPaymentVisible` in `playwright/pages/explore/forms/astropayPage.ts` already targets the checkout iframe and the current Spanish processing text (`Espera mientras procesamos tu pago.`). The failure snapshot contains a DEUNA `Pago rechazado` view and no processing message or visible iframe content, so this is not a selector rename that can be safely changed. The trace also shows repeated 404s for checkout configuration endpoints, consistent with the checkout fail…",Select Astropay as payment method and wait for the redirect popup,,,,,OK,External issue,Justificado como external issue,,,,,,,,,,,,,,
+ENTP1-T2473,Payment Widget: Payment Widget: Guest Flow: T&C acceptance in Click-to-Pay No-Email Flow,team_enterprise,The missing-terms alert was not visible after attempting to continue.,The Click-to-Pay checkout failed to display validation feedback for missing terms and email.,ui_element_missing,"AI analysis (selectorFixer): Checked `playwright/pages/explore/forms/clickToPayFormPage.ts`: the failing assertion owns the selector `#alert-container-notification-warning, #alert-container` inside the nested widget frames. The DOM snapshot confirms the email field and the unchecked `Términos y condiciones` checkbox are present, but contains no alert/validation-feedback element under a different role, text, or structure; the locator search also found no Click-to-Pay alternative selector or related spec implementation. HTTP …",Attempt to continue without accepting Terms and Conditions and filling Email,,,,,OK,Tests case updated,revisar entp1,,,,,,,,,,,,,,
+PI-T2171,Perform Purchase with Installments to validate all installments options using a specific BIN for Dlocal processor through Checkout - Dlocal,team_payment_integration,The DLocal purchase request returned HTTP 422 instead of HTTP 200.,The DLocal installment purchase was rejected by the PSP integration.,psp_decline,"cardFixer tried 2 card(s) this run, none passed verification: dlocalVisaCardSuccessful (failed: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[2); dlocalVisaCardSuccessfulUY (failed: Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[2). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review.","It is validated that the status of the order is processed, the number of installments and the type of installments",,,,,OK,PI validation is required,Deuda técnica  PF-3806,,,,,,,,,,,Pending PI,Recurrent,Deuda técnica  PF-3806,
+ENTP1-T2347,Mercado Pago Wallet - Successful BNPL Payment,team_payment_integration,The Mercado Pago popup page closed before the user ID field could be accessed.,"The Mercado Pago wallet redirect session closed during login, preventing BNPL authorization.",unknown,"Skipped: orchestrator confidence 0.72 below threshold 0.80. The classifier categorizes this as unknown, and the concrete failure is `locator.clear: Target page, context or browser has been closed` while waiting for Mercado Pago's `getByTestId('user_id')` during the external wallet-login popup. The available DEUNA API/order calls are HTTP 200 and no CloudWatch/service 5xx, credentials failure, PSP decline code, or repeated specific-service 503/504 evidence is provided; this is therefore an external-popup/session-close symptom requiring human triage rather…",Step 1: Open popup and login to Mercado Pago,,,,,OK,External issue,,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+ENTP1-T2362,[PaymentLink] MercadoPago Wallet - Processing Efecty payment,team_payment_integration,The Mercado Pago popup page closed while clearing the user ID field.,The external Mercado Pago wallet page closed before the payment form interaction completed.,unknown,"Skipped: orchestrator confidence 0.74 below threshold 0.80. The classifier category is unknown, and the concrete failure is Playwright's `locator.clear: Target page, context or browser has been closed` while waiting for Mercado Pago's `getByTestId('user_id')`. The retained DEUNA API/network evidence is successful (including repeated 200 order reads) and contains no order-scoped 5xx, credential error, or PSP decline that would support an e2e or service-specific route. This is an external-popup closure/timing symptom with insufficient evidence to assign a …",Step 2: Initiate payment and open Mercado Pago popup,Hugo Flotts,ENTP1-T2362,,Ready,OK,ENTP1 validation is required,Admin informa que debe ser revisado con checkout,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,Revisar
+PAYM-T2197,Purchase installments PSP no soporta MCI - Paypal ACDC,team_payment_integration,The order amount was 408000 instead of the expected 310800.,The PayPal ACDC installment purchase returned an incorrect order amount.,assertion_mismatch,"Skipped: orchestrator confidence 0.72 below threshold 0.80. The classifier identifies assertion_mismatch: the test expected an order amount of 310800 but received 408000. Test stdout records ""Order amount wiht interest: 310800,"" while the DOM error confirms the received value is 408000; however, there is no orderId, order-processing response body, or CloudWatch evidence proving a payments-service defect. Route to assertion review in the E2E repo; categoryOverride remains null because the enriched evidence does not conclusively contradict the classifier.","Validate that the order has been processed successfully with status code ""200"" and status order ""processed""",,,,,OK,PAYM validation is required,Revisar casos de prueba en el siguiente release 38.1,,,,,,,,,,,,,,
+PI-T968,Partial Refund por monto menor,team_payment_integration,The transaction remained partial_refunding instead of reaching partial_refunded.,The refund state transition did not complete before transaction validation.,assertion_mismatch,"AI analysis (assertFixer): `playwright/tests/PSP/rede/refund/PI-T968.spec.ts:64-71` submits a 1500 partial refund and correctly requires the terminal `partial_refunded` status; it is not a stale hardcoded mapping. The shared `retryGetOrderStatus` helper (`playwright/support/utils/retries.ts:348-377`) already polls GET Order 15 times with 3-second delays (about 42 seconds between first and last read), but the final observed value remained `partial_refunding`. Since `playwright/support/interfaces/orderStatusTypes.ts:11-12` …",The transaction is partially refunded,Hugo Flotts,,This error must be reviewed by the backend team.,,OK,PI validation is required,Deuda técnica  PF-3806,,,,,,,,,,,Pending PI,Recurrent,Deuda técnica  PF-3806,ok
+PF-T23,Capture exitoso - Redsys,team_payconnect,Redsys capture failed with EMA-6003 and HTTP 409.,The Redsys order could not be captured because the capture operation was rejected in its current state.,assertion_mismatch,"AI analysis (assertFixer): `playwright/tests/PSP/redsys/capture/PF-T23.spec.ts:64-65` intentionally captures only 2500 and then requires the authorized order to reach `captured`; this is a business-flow assertion, not a stale expected literal. The failure occurs before that assertion: `captureV2` posts the requested amount (`playwright/support/http/services/PaymentService.ts:99-113`) and the service returns HTTP 409/EMA-6003, ""cannot capture the order,"" despite the preceding authorization check passing. Flag for serviceIn…",The transaction is partially captured,,,This error must be reviewed by the backend team.,,OK,PAYM validation is required,Deuda técnica  PAYM ticket PAYM-6030,,,,,,,,,,,Pending PAYM,Recurrent,Deuda técnica  PAYM ticket PAYM-6030 ,
+PF-T164,Purchase V2 - Resorts Advantage,team_payconnect,Resorts Advantage purchase was declined with DP-7100 and HTTP 422.,The Resorts Advantage PSP rejected the purchase transaction.,psp_decline,"cardFixer tried 2 card(s) this run, none passed verification: bambooMastercadSuccessfull (failed: Error: Purchase V2 failed: {""code"":""DP-7100"",""description"":""Payment was declined); adyenVisaSuccessful (failed: Error: Purchase V2 failed: {""code"":""DP-7100"",""description"":""Payment was declined). This may be a transient PSP sandbox issue — cards are not excluded from future runs. Needs human review.",User makes a purchase with Resorts Advantage,,,,,OK,Integration HUB validation is required,debe revisar PI,,,,,,,,,,,,,,
+PI-T1697,Purchase exitoso con Visa usando Stripe Connect en Ecuador,team_payment_integration,The Stripe connection pending modal was not found within 30 seconds.,The Stripe connection workflow did not render its pending-status modal.,ui_element_missing,"AI analysis (selectorFixer): The failing locator is owned by `playwright/pages/admin/connections/adminConnectionsPage.ts`: `configureConnection()` invokes `assertStripeConnectionPendingAndClose()`, which waits for `getByTestId('connections-modal-connection-dialog')`. The failure snapshot/call log reports that locator has zero matching elements after 30 seconds, and supplies no alternative dialog role, text, test id, or iframe structure to validate a renamed selector. I also checked `playwright/pages/admin/connections/proces…",The user configure a new connection,Hugo Flotts,PI-T1697,,Ready,OK,External issue,,,,,,,,,,,,,,,
+PAYM-T2187,Cybersource - sanitización de datos en billing - uso de la info de card holder,team_payment_integration,The billing validation returned Missing instead of APRO.,The Cybersource billing data sanitization flow did not populate or validate the cardholder name correctly.,assertion_mismatch,"AI analysis (assertFixer): The assertion is an intended billing-sanitization rule, not a stale literal: PAYM-T2187 sends an order with empty billing first/last names, while the entered fraud-approved card fixture has `cardholder_name: 'APRO APRO'` (`playwright/support/interfaces/credit_cards/stripeCreditCards.ts:59`). The helper parses the persisted Cybersource request and explicitly asserts `billTo.firstName` and `billTo.lastName` are `APRO` (`playwright/pages/deuna_now/deunaNowPage.ts:1952-1967, 2010-2013`), but the cap…",It validates that firstName and lastName have the cardholder name,Hugo Flotts,,,,OK,External issue,Deuda técnica PI ticket  PI-6231 -  Cybersource,,,,,,,,,,,Pending PI,External issue,Deuda técnica PI ticket  PI-6231 -  Cybersource,ok
+PI-T1213,Successful capture with WorldPay using the payment widget - and total order captured via webhook in PE,team_payment_integration,The actionable order button remained disabled after reload.,The WorldPay authorized order was not exposed as actionable for capture in the order details UI.,ui_element_missing,"AI analysis (selectorFixer): Reviewed `playwright/pages/admin/orders/adminOrderDetailsPage.ts`: `clickOnActionableButton()` correctly targets `getByTestId('order-details-button-actionable')` and waits through a reload before capture. The DOM snapshot confirms that exact button is present (role/name ""Accionables"") but remains disabled, so this is not a stale/missing locator or an iframe/rename issue. Cross-checked the Worldpay capture specs, which use the same shared `captureTotalOrder()` method; no alternate actionable-cont…",Step 8: Initiate capture process for authorized transaction,Julian David Mora Ramos,PI-T1213,,Ready,OK,ADM validation is required,"revisando el notion con la justificación, el error no representa un riesgo en Prod, adicionalmente, el error será corregido por el equipo Admin como technical-debt con la task ADM-5108",,,,,,,,,,,,,,
+PI-T1217,Purchase exitoso Visa con WorldPay usando vault en Peru,team_payment_integration,The purchase request returned HTTP 422 instead of HTTP 200.,The WorldPay vault purchase was rejected by the payment service.,assertion_mismatch,"AI analysis (assertFixer): PI-T1217 explicitly exercises a successful Worldpay PE vault purchase: it supplies `worldpayVisaCardSuccessful` and asserts `processed`/HTTP 200 at playwright/tests/PSP/worldpay/purchase_directo/guest_user/vault/PI-T1217.spec.ts:105. The shared card fixture defines this as the successful Worldpay Visa (4000000000000077), and the PE processor configuration uses PEN/PE; the 422 plus the rendered “No pudimos realizar tu compra” is therefore a payment-service regression, not a stale expected status.…",It is validated that the card and purchase V2 request is sent,,,,,OK,PI validation is required,"Se agregará a deuda tecnica, ticket pendiente por crear",,,,,,,,,,,,,,
+PI-T1977,(1.0) Authorize → Capture Total V2 → Refund Total V2 ELAVON (after settlement),team_payment_integration,Elavon authorization was declined with DP-7101 and HTTP 422.,The Elavon PSP declined the authorization transaction.,psp_decline,"AI analysis (cardFixer): The spec imports cards through the existing namespace import `* as creditCardData` and the only card call site is `CreateBody(creditCardData.elavonVisaSuccessfull)` in the Authorize step. The authorization received Elavon DP-7101/HTTP 422, so this proposal swaps that declined card reference for the next curated successful candidate, `adyenVisaSuccessful`, while preserving the file's established namespace-import pattern and all unrelated content.
+
+[downgraded to enrichment_only: gitleaks flagged …",Authorize,Hugo Flotts,,,,OK,ISO validation is required,Deuda técnica PI  PI-6238,,,,,,,,,,,Pending PI,ISO validation is required,Deuda técnica PI  PI-6238,ok
+PI-T1979,(1.0) Purchase V2 → Refund Total V2 ELAVON (before settlement),team_payment_integration,Elavon purchase was declined with DP-7100 and HTTP 422.,The Elavon PSP rejected the purchase transaction.,psp_decline,"AI analysis (cardFixer): The spec imports cards through the `creditCardData` namespace and the only purchase card call site is `CreateBody(creditCardData.elavonVisaSuccessfull)`. The purchase failed at that call with Elavon DP-7100/HTTP 422, so this proposal replaces it with the highest-ranked curated successful alternative, `adyenVisaSuccessful`, while preserving the existing namespace-import pattern.
+
+[downgraded to enrichment_only: gitleaks flagged 1 potential secret(s) in the proposed diff — playwright/tests/settlem…",Purchase V2,Hugo Flotts,,,,OK,ISO validation is required,Deuda técnica PI  PI-6238,,,,,,,,,,,Pending PI,ISO validation is required,Deuda técnica PI  PI-6238,ok
+PI-T2085,(1.0) Authorize → Capture Partial V1 → Refund Partial Multiple V2 ELAVON (before settlement),team_payment_integration,The capture response contained one transaction instead of the expected two.,The Elavon partial capture flow returned an incomplete transaction collection.,assertion_mismatch,"Known external/PSP issue (similarity 0.99) — recurring failure with no fix on our side. Marked ""OK"" / ""External issue"" per knowledge base.",Capture Partial V1,,,,,OK,External issue,Deuda técnica PI  PI-6238,,,,,,,,,,,Pending PI,ISO validation is required,Deuda técnica PI  PI-6238,
+ADM-T506,Voucher orden procesada,team_admin,The test failed without reporting an error message.,The voucher order email-reading flow failed without exposing a diagnosable technical cause.,unknown,"Known external/PSP issue (similarity 0.98) — recurring failure with no fix on our side. Marked ""OK"" / ""External issue"" per knowledge base.",the user read email automatic,,,,,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+ENTP1-T2021,Compra exitosa con TC/TD y usuario EXISTENTE - Email desde ecommerce y Autenticacion,team_enterprise,The OTP email was not delivered to the MailSlurp inbox within 60 seconds.,The authentication email delivery or MailSlurp retrieval flow did not provide the OTP.,unknown,"Skipped: orchestrator confidence 0.72 below threshold 0.80. The classifier category is unknown, and the concrete failure is that MailSlurp found zero OTP emails after its 60-second timeout. The only relevant application call shown is POST /users/request-code returning HTTP 204, with no orderId, CloudWatch evidence, 5xx response, or delivery-service trace to distinguish a MailSlurp infrastructure/retrieval issue from an authentication-email delivery issue. This requires human triage rather than guessing a service repository.",,,,,,OK,ENTP1 validation is required,Deuda técnica ENTP1 ticket  ENTP1-17912,,,,,,,,,,,QA review,Recurrent,Deuda técnica ENTP1 ticket  ENTP1-17912,
+ENTP1-T2596,Test Cross Domain Login,team_enterprise,The saved-card last-four element was not visible in the checkout iframe.,The cross-domain login flow failed to render saved cards after the session was reopened.,ui_element_missing,Issue opened (credentialsFixer): https://github.com/DUNA-E-Commmerce/e2e-testing/issues/3640,Verify saved cards visible without OTP (session persists after reopen),,,,,OK,ENTP1 validation is required,"clean up is pending, x-session-id, queda como deuda tecnica ENTP1-18140",,,,,,,,,,,QA review,Flaky,QA-4498,
+ENTP1-T2028,Payment Widget: Fingerprint OpenPay,team_enterprise,The expected OpenPay device response was not received within 60 seconds.,The payment widget did not receive the OpenPay device fingerprint response.,infra,Issue opened (infraMarker): https://github.com/DUNA-E-Commmerce/e2e-testing/issues/3639,widget waits for key to be loaded,,,,,OK,External issue,Deuda técnica  PF ticket PF-3774,,,,,,,,,,,Pending PI,External issue,Deuda técnica  PF ticket PF-3774,
+ENTP1-T2428,PaymentWidget as Form: Safetypay Direct,team_enterprise,No response was received while selecting the SafetyPay processor.,The SafetyPay processor selection request did not complete within the timeout.,infra,"Skipped: orchestrator confidence 0.72 below threshold 0.80. The classifier identifies this as infra, and the concrete failure is `page.waitForResponse` timing out after 60000ms while selecting SafetyPay; no failed HTTP response or PSP error is present in the captured network calls. The visible requests are repeated successful `200` checkout-config calls, so the evidence does not identify a specific backend repository or support an E2E selector/payload fix. This will be recorded for CSV enrichment and SRE-oriented investigation only; Phase 1 will not open…",select safetypay processor,,,,,OK,PAYM validation is required,Cristhian Laurente menciona que Payments deberia revisarlo,,,,,,,,,,,,,,
+ENTP1-T2470,PaymentWidget: Test de Regresión Visual de Payment Widget con Order Detail Pattern (Elektra),team_enterprise,The payment widget screenshot differed from its baseline by 24095 pixels.,The Elektra payment widget visual rendering no longer matches the approved snapshot.,visual_regression,"Skipped: orchestrator confidence 0.50 below threshold 0.80. The classifier identifies visual_regression, and the DOM failure shows a stable Playwright screenshot mismatch of 24,095 pixels (2%) after fonts loaded and animations were disabled. Although this is a visual test by title/tag, the supplied evidence does not establish that it runs under the dedicated visual-testing project required for snapshotUpdater; the trace also contains unrelated 401/404/422 responses without evidence tying them to the screenshot delta. Human triage should determine whether…",User verifies UI,,,,,OK,Tests case updated,se hace retest y funciona,,,,,,,,,,,,,,
+ENTP1-T2552,WebSDK - Payment Widget: Successful initialization,team_enterprise,The measured initialization time was 1455.85 ms instead of exceeding 1500 ms.,The WebSDK initialization performance measurement did not meet the configured threshold.,assertion_mismatch,"AI analysis (assertFixer): Inspected `playwright/tests/teams/checkout/websdk/ENTP1-T2552.spec.ts:61-73`: `startTime` is set only after `openPaymentWidget()` returns, then the test waits for the processor title and requires that visibility wait to exceed 1500 ms. `WebSdkHarnessPage.assertPaymentWidgetProcessorTitle()` (`playwright/pages/checkout/websdk/harness.ts:33-35`) only waits for the title to become visible; the observed 1455.85 ms means the widget became ready faster, not that required content was missing. Although …",Should assert the time elapsed,Hugo Flotts,,,,OK,Environment issue,se hace retest y funciona,.,,,,,,,,,,,,,
+ENTP1-T2026,[Eventos]: Payment Vault Usuarios Existente con canal Email - código valido y flujo autenticado,team_enterprise,The saved-cards see-more button was not visible in the vault iframe.,The payment vault failed to render the control for expanding the saved-card list.,ui_element_missing,"AI analysis (selectorFixer): The current locator is owned by `VaultWidgetPage.seeMoreCards()` in `playwright/pages/vault/vaultWidgetPage.ts` and targets `getByTestId('see-all-cards-button')`. The failure snapshot is still the email OTP view (heading “Ingresa el código de verificación” and six OTP inputs), where the saved-card control is genuinely absent—not present under a renamed role/text/structure—so changing the locator would mask the upstream state-transition failure. The shared flow (`playwright/tests/teams/vault/shar…",Expand the saved cards list,,,,,OK,Environment issue,se hace retest y funciona,,,,,,,,,,,,,,
+ADM-T505,Export orders drawer,team_admin,The export-orders drawer screenshot differed from its baseline by 27060 pixels.,The admin export-orders drawer rendering no longer matches the approved snapshot.,visual_regression,"Skipped: orchestrator confidence 0.50 below threshold 0.80. The classifier identifies visual_regression, and the test is under the visual_tests project as required for this category. Playwright captured a stable screenshot after fonts loaded, but 27,060 pixels (3%) still differed from the approved baseline; the visual-regression confidence cap is 0.5, which requires human triage under the low-confidence routing rule.",User open the export orders drawer and verifies it,,,,,OK,Environment issue,se hace retest y funciona,,,,,,,,,,,,,,
+ENTP1-T2155,PaymentWidget: Validar aplicación correcta de CustomStyle en flujo de loggeado previamente,team_enterprise,The welcome-view screenshot differed from its baseline by 30386 pixels.,The payment widget custom-style rendering no longer matches the approved snapshot.,visual_regression,"Skipped: orchestrator confidence 0.50 below threshold 0.80. The classifier identifies visual_regression, and this test is under the visual_tests project. Playwright reports a stable screenshot mismatch of 30,386 pixels (3%) after fonts loaded and animations were disabled; no service-side 5xx or conclusive backend error ties the rendered difference to a service defect. Visual-regression routing is capped at 0.5 confidence.",User verifies UI,Hugo Flotts,ENTP1-T2155,,Ready,OK,ENTP1 validation is required,,,,,,,,,,,,,,,
+ENTP1-T2380,Traducciones - Split Payment - Guest - Billing Form - EN,team_enterprise,The split-payment vault container screenshot differed from its baseline by 16547 pixels.,The split-payment billing form rendering no longer matches the approved visual baseline.,visual_regression,"Skipped: orchestrator confidence 0.50 below threshold 0.80. The classifier identifies visual_regression, and the failing spec is under the visual_tests project. Playwright resolved #vault_embed_container successfully and reports a stable screenshot mismatch of 16,547 pixels (6%), while the available HTTP/network calls are 200 with no 5xx evidence of a service failure; visual-regression routing is capped at 0.5 confidence.",Fill second card amount,,,,,OK,Environment issue,"26 ago en regresiones anteriores el test estaba clasificado como FLAKY y en estas regresiones 35.2 no funciona
+27 ago se hace retest y funciona",,,,,,,,,,,QA review,Flaky,QA-4498,
+ENTP1-T2452,Successful purchase with pending voucher,team_enterprise,Payment processor creation failed during test setup.,The voucher test environment could not provision the required payment processor.,unknown,"Insufficient signal for auto-fix — AI analysis: The most likely cause is a test-environment/setup helper defect or API contract mismatch: processor provisioning reports `Create payment processor failed: {}`, while cleanup sends `DELETE /merchants/.../stores/all/processors/` (with no processor ID) and receives a definitive 404. The preceding processor POST returned 200, so this may be an unparsed/empty create response followed by deletion of an unresolved processor identifier, rather than a voucher-widget failure. Check:
+- The payment-processo…",,,,,,OK,PI validation is required,Deuda técnica  PF-3806,,,,,,,,,,,Pending PI,Recurrent,Deuda técnica  PF-3806,
+ENTP1-T2090,Successful guest purchase without installments,team_enterprise,The PayPal redirect view screenshot differed from its baseline by 3772 pixels.,The PayPal redirect view rendering no longer matches the approved snapshot.,visual_regression,"Skipped: orchestrator confidence 0.55 below threshold 0.80. The classifier and DOM evidence identify a visual_regression: `toHaveScreenshot(screen-paypal-redirect-view-desktop.png)` differs by 3772 pixels (2%) after the iframe body was stable and fonts loaded. However, the spec is under `playwright/tests/wallet/...`, not a demonstrated `visual-testing` project, so snapshotUpdater is not applicable under the visual-regression routing constraint. The trace also contains repeated 401 session-device and 404 runtime-config/fraud-config calls, but there is ins…",Should verify the redirect view consistency,,,,,OK,Environment issue,se hace retest y funciona,,,,,,,,,,,,,,
+ENTP1-T2289,Successful authenticated purchase with installments - Existing account,team_enterprise,The installment dropdown option remained outside the viewport until the test timed out.,The installment selector interaction failed because the dropdown option was not actionable in the rendered viewport.,unknown,"Skipped: orchestrator confidence 0.72 below threshold 0.80. The classifier category is unknown, and the DOM evidence shows the installments listbox resolves and is visible/enabled/stable but remains outside the viewport after Playwright scroll attempts, causing the 240s click timeout. This is an interaction/layout or timing-race symptom rather than a conclusively stale/missing selector; the repeated 404 calls to /checkout-config/merchants/configurations are notable but cannot be causally tied to the dropdown failure from the available evidence. No catego…",Should select installments,,,,,OK,External issue,error de mercado pago,,,,,,,,,,,,,,

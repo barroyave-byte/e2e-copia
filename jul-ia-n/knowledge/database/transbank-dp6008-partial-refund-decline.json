@@ -1,0 +1,32 @@
+{
+  "id": "transbank-dp6008-partial-refund-decline",
+  "title": "Transbank — DP-6008 'transaction may not have been refunded' (HTTP 422) on partial refund, no fix on our side",
+  "symptom": "Partial Refund por monto menor (incluye Mall Transaction). Refund V2 failed with DP-6008 'transaction may not have been refunded' (HTTP 422). Transbank partial refund is being rejected by the PSP/back-end, so the refund cannot be completed. Fails validating that the transaction is partially refunded. Recurring Transbank-side partial refund rejection across the refund suite with the same signature.",
+  "testCaseIds": [
+    "PI-T671",
+    "PI-T1351"
+  ],
+  "rootCauseCategory": "psp_decline",
+  "tags": [
+    "@transbank",
+    "@team_payment_integration",
+    "DP-6008",
+    "refund",
+    "partial-refund",
+    "mall",
+    "decline",
+    "external-issue"
+  ],
+  "recipe": "NOT a fix — this is a known, recurring Transbank-side (PSP/back-end) rejection confirmed external to DEUNA: Transbank returns HTTP 422 DP-6008 'transaction may not have been refunded' on the partial refund (Refund V2) step, for both standard and Mall transactions, so the transaction never reaches the partially-refunded state. No code change on our side resolves it — do NOT swap cards via cardFixer (the KB prior art suggested cardFixer, but this is not a card problem), do not relax the refund assertion, do not escalate to serviceInvestigator. Mark the regression row as reviewed via the known-issue disposition (QA Review=OK, Root cause QA=External issue) so devs don't re-triage a case that's already understood. If Transbank starts accepting these partial refunds and this stops recurring, this entry will simply stop matching (no manual deprecation needed) — re-open only if Transbank confirms a permanent fix and you want to retire the entry explicitly.",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-03",
+  "status": "active"
+}

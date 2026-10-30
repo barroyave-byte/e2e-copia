@@ -1,0 +1,47 @@
+{
+  "psp": "dlocal",
+  "cards": [
+    {
+      "variableName": "dlocalMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "dlocalVisaCardSuccessfulWithRFC",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "dlocalDebitCardSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    },
+    {
+      "variableName": "dlocalVisaCardSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "dlocalUnknownCardSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    },
+    {
+      "variableName": "dlocalCodensaCardSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    },
+    {
+      "variableName": "dlocalVisaCardSuccessfulUY",
+      "country": "UY",
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

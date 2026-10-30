@@ -1,0 +1,29 @@
+{
+  "psp": "paymentez",
+  "cards": [
+    {
+      "variableName": "paymentezDinerSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    },
+    {
+      "variableName": "paymentezVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "paymentezMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "paymentezDiscoverSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    }
+  ]
+}

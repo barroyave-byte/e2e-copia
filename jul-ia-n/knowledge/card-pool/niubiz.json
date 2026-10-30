@@ -1,0 +1,17 @@
+{
+  "psp": "niubiz",
+  "cards": [
+    {
+      "variableName": "niubizVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "niubizMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    }
+  ]
+}

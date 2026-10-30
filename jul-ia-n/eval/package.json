@@ -1,0 +1,8 @@
+{
+  "name": "jul-ia-n-eval",
+  "private": true,
+  "description": "Eval-only dependencies of ai-heal (npm run ai-heal:eval). Kept out of the root package so test runs, CI shards and the pre-production image don't install promptfoo's ~1 GB dependency tree.",
+  "dependencies": {
+    "promptfoo": "^0.121.19"
+  }
+}

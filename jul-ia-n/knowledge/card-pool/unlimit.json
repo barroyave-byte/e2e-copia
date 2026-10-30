@@ -1,0 +1,23 @@
+{
+  "psp": "unlimit",
+  "cards": [
+    {
+      "variableName": "unlimitVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "unlimitMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "unlimitVisaAuthorized",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

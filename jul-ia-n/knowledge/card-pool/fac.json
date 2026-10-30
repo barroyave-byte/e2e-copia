@@ -1,0 +1,11 @@
+{
+  "psp": "fac",
+  "cards": [
+    {
+      "variableName": "facVisaSuccessfull",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

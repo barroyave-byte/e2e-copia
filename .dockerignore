@@ -1,0 +1,40 @@
+## General
+node_modules/
+# Not needed at runtime; keeps the build context (and the final COPY layer) small
+.git
+graphify-out
+# Never bake local secrets into the image (CI checkouts have no .env; local builds do).
+# Only the untracked .env: the tracked .env.<environment> files are loaded at runtime.
+/.env
+blob-report*
+videos/
+screenshots/
+test-to-json/
+jsonlogs/
+logs/
+reports/
+scripts
+docker-compose
+makefiles
+.github
+.vscode
+
+# Archivos específicos de macOS
+.DS_Store
+.zshrc
+
+# Carpetas y archivos específicos de IDE
+.idea/*
+
+# Secretos generados
+secrets*.json
+
+## Cypress
+.cypress-cucumber-preprocessorrc.json
+
+## Playwright
+playwright/test-results/
+test-results
+@rerun.txt
+playwright-report
+playwright/newman-test-results

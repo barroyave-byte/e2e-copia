@@ -1,0 +1,11 @@
+{
+  "psp": "evopayments",
+  "cards": [
+    {
+      "variableName": "evopaymentsMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    }
+  ]
+}

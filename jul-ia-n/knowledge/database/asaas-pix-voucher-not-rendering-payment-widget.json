@@ -1,0 +1,31 @@
+{
+  "id": "asaas-pix-voucher-not-rendering-payment-widget",
+  "title": "Asaas PIX — voucher 'Completa tu pago' not rendering in payment widget iframe, known non-actionable",
+  "symptom": "Asaas PIX - Payment Widget: Successful purchase. PIX voucher text 'Completa tu pago' not found in widget iframe (timeout). Asaas PIX voucher view is not rendering/loaded in the payment widget iframe. Fails at step Should validate Asaas PIX voucher. Also hits the expired-purchase flow. Known, recurring non-actionable failure — the Asaas PIX voucher view does not load on the provider side.",
+  "testCaseIds": [
+    "ENTP1-T2453",
+    "ENTP1-T2454"
+  ],
+  "rootCauseCategory": "ui_element_missing",
+  "tags": [
+    "@asaas",
+    "@team_enterprise",
+    "@payment_widget",
+    "pix",
+    "voucher",
+    "iframe",
+    "external-issue"
+  ],
+  "recipe": "NOT a fix — this is treated as a known, recurring non-actionable failure: the Asaas PIX voucher view ('Completa tu pago') does not render/load in the payment widget iframe, so the voucher validation step times out. Do NOT propose a diff, do not swap the locator via selectorFixer, do not adjust the payload via payloadFixer, do not escalate to serviceInvestigator. Mark the regression row as reviewed via the known-issue disposition (QA Review=OK, Root cause QA=External issue) so devs don't re-triage a case that's already understood. If the Asaas PIX voucher starts rendering (the 'Completa tu pago' text appears, or the failure changes shape), this entry will stop matching and the case will route normally — re-open only to retire the entry explicitly once the voucher view is confirmed fixed.",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-03",
+  "status": "active"
+}

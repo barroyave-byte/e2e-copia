@@ -1,0 +1,11 @@
+{
+  "psp": "transbank",
+  "cards": [
+    {
+      "variableName": "transbankVisaSuccessfull",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

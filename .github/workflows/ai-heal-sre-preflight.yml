@@ -1,0 +1,362 @@
+name: ai-heal SRE Agent preflight
+
+# Verifies ai-heal's LiteLLM workload key against the real company_ai MCP
+# gateway. Runs here rather than on a laptop for one reason: the key lives only
+# as a GitHub Actions secret, and GitHub secrets cannot be read back — so this
+# is the only place the check can run without handing a workload credential to a
+# person, which is the posture DEUNA_AI_ARCHITECTURE.md asks for ("a managed
+# credential that is never distributed to employees").
+#
+# Run it after the secret is first created, after every rotation, and any time
+# serviceInvestigator starts failing on auth.
+#
+# What it proves depends on run_rca. Off: the key authenticates and the expected
+# tools are visible. On: the ai-operator `operator_entitlement` grant is real —
+# the only conclusive check, since a team missing that grant passes everything
+# else. See jul-ia-n/eval/sreAgentPreflight.ts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_rca:
+        description: 'Also call rca_session_run (proves the operator_entitlement grant; starts a throwaway RCA session on the server)'
+        required: false
+        type: boolean
+        default: false
+      environment:
+        description: 'Scenario environment; also derives the AWS account alias (staging -> dev)'
+        required: false
+        type: string
+        default: 'staging'
+
+  # TEMPORARY — delete this whole `push:` block once the workflow reaches
+  # `master`. GitHub only shows the "Run workflow" button for a
+  # `workflow_dispatch` workflow whose file exists on the repository's DEFAULT
+  # branch, and this file currently lives only on the feature branch, so the
+  # button is unavailable and there is no other way to trigger it. Scoped to one
+  # branch and to the three paths that can change the answer, so it does not fire
+  # on unrelated work.
+  push:
+    branches:
+      - feat/service-investigator-sre-agent-mcp
+    paths:
+      - '.github/workflows/ai-heal-sre-preflight.yml'
+      - 'jul-ia-n/eval/sreAgentPreflight.ts'
+      - 'jul-ia-n/tools/prodSreAgentClient.ts'
+
+jobs:
+  preflight:
+    name: Preflight LiteLLM workload key
+    runs-on: gha-runner-e2e
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Fail early if the secret is absent
+        # Distinguishes "secret not created yet" from "secret rejected", which
+        # otherwise look similar in the log and get triaged to the wrong team.
+        env:
+          AI_HEAL_LITELLM_MCP_KEY: ${{ secrets.AI_HEAL_LITELLM_MCP_KEY }}
+        run: |
+          if [ -z "${AI_HEAL_LITELLM_MCP_KEY}" ]; then
+            echo "::error::AI_HEAL_LITELLM_MCP_KEY is not set on this repository."
+            echo "It is created by ITOps via ticket, with the value supplied directly by SRE."
+            echo "See jul-ia-n/docs/sre-agent-workload-access-request.md."
+            exit 1
+          fi
+          echo "Secret is present (value never printed)."
+
+      - name: Run preflight
+        env:
+          AI_HEAL_LITELLM_MCP_KEY: ${{ secrets.AI_HEAL_LITELLM_MCP_KEY }}
+          AI_HEAL_ENVIRONMENT: ${{ inputs.environment || 'staging' }}
+          AI_HEAL_LOG_LEVEL: info
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_RUN_RCA: ${{ inputs.run_rca }}
+        run: |
+          set -euo pipefail
+          # Resolved in shell rather than a GitHub expression on purpose:
+          # `event_name == 'workflow_dispatch' && inputs.run_rca || true` looks
+          # right and is wrong — GitHub's `||` yields the right operand whenever
+          # the left is falsy, so an explicit run_rca=false would silently become
+          # true and fire a real RCA session against the operator's intent.
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            RUN_RCA="${INPUT_RUN_RCA}"
+          else
+            # Push-triggered runs stay cheap. While the grant was still being
+            # debugged this branch forced --rca, because proving the
+            # operator_entitlement was the whole question. It was proven green on
+            # 2026-08-18, and re-proving it on every push starts another real RCA
+            # session on SRE's server for no new information. Use workflow_dispatch
+            # with run_rca=true when the conclusive check is actually wanted.
+            RUN_RCA="false"
+          fi
+
+          if [ "${RUN_RCA}" = "true" ]; then
+            echo "Running with --rca (proves the operator_entitlement grant)."
+            npm run ai-heal:sre-preflight -- --rca
+          else
+            echo "Running without --rca — the operator_entitlement grant will NOT be proven."
+            npm run ai-heal:sre-preflight
+          fi
+
+  openai-models:
+    name: Probe OPENAI_API_KEY model access
+    runs-on: gha-runner-e2e
+    timeout-minutes: 5
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      # Answers two questions the ai-heal run log cannot: which models this key
+      # can reach at all, and whether the ones ai-heal asks for are among them.
+      # A whole regression's orchestrator calls failed with "404 status code (no
+      # body)" on gpt-5.6-terra while classify kept working on gpt-5.6-luna with
+      # the same key, which points at per-model access on that key's project —
+      # but it could not be measured from a laptop, because GitHub secrets cannot
+      # be read back.
+      #
+      # Only model ids and HTTP statuses are printed. A /v1/models response
+      # carries no credential, and the key itself is never echoed.
+      - name: Fail early if the secret is absent
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "::error::OPENAI_API_KEY is not set on this repository."
+            exit 1
+          fi
+          echo "Secret is present (value never printed)."
+
+      - name: List the models this key can use
+        id: list
+        run: |
+          set -uo pipefail
+          CODE=$(curl -sS -o /tmp/models.json -w '%{http_code}' \
+            https://api.openai.com/v1/models \
+            -H "Authorization: Bearer ${OPENAI_API_KEY}")
+
+          if [ "$CODE" != "200" ]; then
+            echo "::error::GET /v1/models returned ${CODE}. The key itself is rejected, so no per-model conclusion can be drawn."
+            head -c 400 /tmp/models.json; echo
+            exit 1
+          fi
+
+          jq -r '.data[].id' /tmp/models.json | sort > /tmp/model-ids.txt
+          TOTAL=$(wc -l < /tmp/model-ids.txt | tr -d ' ')
+
+          echo "=== ${TOTAL} models visible to this key ==="
+          cat /tmp/model-ids.txt
+
+          # The summary shows only what ai-heal could plausibly be pointed at:
+          # the gpt-5 reasoning family and the embeddings models. The full list
+          # is in the step log above.
+          {
+            echo "### Models this key can use"
+            echo ""
+            echo "**${TOTAL}** models visible in total. Relevant to ai-heal:"
+            echo ""
+            echo '```'
+            grep -E '^(gpt-5|text-embedding)' /tmp/model-ids.txt || echo "(none — this key sees no gpt-5 or embeddings model at all)"
+            echo '```'
+            echo ""
+            echo "<details><summary>All ${TOTAL} model ids</summary>"
+            echo ""
+            echo '```'
+            cat /tmp/model-ids.txt
+            echo '```'
+            echo ""
+            echo "</details>"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check the models ai-heal actually asks for
+        # Runs even when the listing step failed, so a rejected key still reports
+        # a per-model status instead of an empty summary.
+        if: always() && steps.list.outcome != 'skipped'
+        run: |
+          set -uo pipefail
+          FAILED=0
+          {
+            echo "### Models ai-heal asks for"
+            echo ""
+            echo "| Model | Used by | HTTP | In the list above |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          probe() {
+            MODEL="$1"
+            USED_BY="$2"
+            CODE=$(curl -sS -o /tmp/probe.json -w '%{http_code}' \
+              "https://api.openai.com/v1/models/${MODEL}" \
+              -H "Authorization: Bearer ${OPENAI_API_KEY}")
+            LISTED="no"
+            if [ -f /tmp/model-ids.txt ] && grep -qx "${MODEL}" /tmp/model-ids.txt; then
+              LISTED="yes"
+            fi
+            echo "| \`${MODEL}\` | ${USED_BY} | ${CODE} | ${LISTED} |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$CODE" = "200" ]; then
+              echo "OK   ${MODEL} (${USED_BY}) -> ${CODE}, listed=${LISTED}"
+            else
+              echo "FAIL ${MODEL} (${USED_BY}) -> ${CODE}, listed=${LISTED}"
+              head -c 400 /tmp/probe.json; echo
+              FAILED=1
+            fi
+          }
+
+          # Kept in sync by hand with the defaults in jul-ia-n/models/openai.ts
+          # (OPENAI_MODEL_CLASSIFY / OPENAI_MODEL_REASONING / OPENAI_EMBEDDINGS_MODEL).
+          # Reading them out of the source would need a checkout plus ts-node for
+          # three string literals, and a silent fallback to a stale name is worse
+          # than a probe that names what it is probing.
+          probe "gpt-5.6-luna" "classify"
+          probe "gpt-5.6-terra" "orchestrator + agentic subagents"
+          probe "text-embedding-3-small" "knowledge base embeddings"
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::error::This key cannot reach every model ai-heal uses. A non-200 on the orchestrator model is the cause of \"404 status code (no body)\" in the heal run."
+            exit 1
+          fi
+          echo "All models reachable with the CI key."
+
+      - name: Reproduce the call ai-heal actually makes
+        # Model visibility (the step above) and endpoint availability are not the
+        # same thing: a model can be listed by /v1/models and still 404 on
+        # /v1/chat/completions, which is where getStructuredOutput sends every
+        # classify and orchestrator call (jul-ia-n/models/openai.ts:67). This step
+        # therefore POSTs the real request shape — json_schema + strict — instead
+        # of asking whether the model exists.
+        #
+        # Each call is a handful of tokens. The x-request-id is printed because it
+        # is what OpenAI support needs to explain a 404 with no body.
+        if: always()
+        run: |
+          set -uo pipefail
+          FAILED=0
+          {
+            echo "### POST /v1/chat/completions (the call that 404s)"
+            echo ""
+            echo "| Model | HTTP | x-request-id |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          call() {
+            MODEL="$1"
+            CODE=$(curl -sS -o /tmp/cc.json -D /tmp/cc.head -w '%{http_code}' \
+              https://api.openai.com/v1/chat/completions \
+              -H "Authorization: Bearer ${OPENAI_API_KEY}" \
+              -H 'Content-Type: application/json' \
+              -d "{\"model\":\"${MODEL}\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}],\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"probe\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"ok\":{\"type\":\"string\"}},\"required\":[\"ok\"],\"additionalProperties\":false}}}}")
+            REQ_ID=$(grep -i '^x-request-id:' /tmp/cc.head | tr -d '\r' | cut -d' ' -f2-)
+            echo "| \`${MODEL}\` | ${CODE} | \`${REQ_ID:-none}\` |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$CODE" = "200" ]; then
+              echo "OK   ${MODEL} -> ${CODE} (x-request-id: ${REQ_ID:-none})"
+            else
+              echo "FAIL ${MODEL} -> ${CODE} (x-request-id: ${REQ_ID:-none})"
+              echo "--- response body (${MODEL}) ---"
+              head -c 600 /tmp/cc.json; echo
+              echo "--- response headers (${MODEL}) ---"
+              cat /tmp/cc.head
+              FAILED=1
+            fi
+          }
+
+          call "gpt-5.6-luna"
+          call "gpt-5.6-terra"
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::error::A model ai-heal uses is not served on /v1/chat/completions for this key. That is the \"404 status code (no body)\" seen in the heal run."
+            exit 1
+          fi
+          echo "Both models answer on /v1/chat/completions with this key."
+
+      - uses: actions/checkout@v5
+        if: always()
+      - uses: actions/setup-node@v4
+        if: always()
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        if: always()
+        run: npm ci --no-audit --no-fund
+
+      - name: Same call, through the openai SDK
+        # curl and the SDK are not the same client: the SDK adds its own headers,
+        # its own retry/timeout handling and its own URL construction. If curl
+        # gets 200 on a model and the SDK gets 404 on the same model, key and
+        # endpoint are both fine and the fault is in the client layer — which is
+        # the only remaining place it could be. This mirrors openAiInstance()
+        # (jul-ia-n/models/openai.ts:52-59) and the request getStructuredOutput
+        # builds, including the SDK version resolved by npm ci.
+        if: always()
+        run: |
+          set -uo pipefail
+          node -e '
+            const OpenAI = require("openai").default;
+            const client = new OpenAI({
+              apiKey: process.env.OPENAI_API_KEY,
+              timeout: Number(process.env.AI_HEAL_OPENAI_TIMEOUT_MS || 30 * 60 * 1000),
+              maxRetries: Number(process.env.AI_HEAL_OPENAI_MAX_RETRIES || 1),
+            });
+            // openai ships "exports" without ./package.json, so require() and
+            // require.resolve() both refuse it. Read the manifest off disk.
+            const version = JSON.parse(
+              require("fs").readFileSync("node_modules/openai/package.json", "utf8"),
+            ).version;
+            const probe = async (model) => {
+              try {
+                const r = await client.chat.completions.create({
+                  model,
+                  messages: [
+                    { role: "system", content: "Reply with JSON." },
+                    { role: "user", content: "ping" },
+                  ],
+                  response_format: {
+                    type: "json_schema",
+                    json_schema: {
+                      name: "probe",
+                      strict: true,
+                      schema: {
+                        type: "object",
+                        properties: { ok: { type: "string" } },
+                        required: ["ok"],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                });
+                console.log(`OK   ${model} -> ${r.model} (request id ${r._request_id || "none"})`);
+                return true;
+              } catch (err) {
+                console.log(`FAIL ${model} -> ${err.status || "?"} ${err.message}`);
+                console.log(`     request id: ${err.request_id || "none"}`);
+                console.log(`     url guess:  ${err?.error?.url || client.baseURL}`);
+                return false;
+              }
+            };
+            (async () => {
+              console.log(`openai SDK version: ${version}`);
+              console.log(`client baseURL:     ${client.baseURL}`);
+              console.log(`OPENAI_BASE_URL env: ${process.env.OPENAI_BASE_URL || "(unset)"}`);
+              // The SDK picks these up from the environment on its own and sends
+              // them as OpenAI-Organization / OpenAI-Project headers; curl sends
+              // neither, so they are the one way the two probes can differ. They
+              // are identifiers, not credentials.
+              console.log(`OPENAI_ORG_ID env:     ${process.env.OPENAI_ORG_ID || "(unset)"}`);
+              console.log(`OPENAI_PROJECT_ID env: ${process.env.OPENAI_PROJECT_ID || "(unset)"}`);
+              console.log(`HTTPS_PROXY env:       ${process.env.HTTPS_PROXY || process.env.https_proxy || "(unset)"}`);
+              const ok = [
+                await probe("gpt-5.6-luna"),
+                await probe("gpt-5.6-terra"),
+              ];
+              if (ok.includes(false)) {
+                console.log("::error::The SDK cannot reach a model that curl reached. The fault is in the client layer, not the key.");
+                process.exit(1);
+              }
+            })();
+          '

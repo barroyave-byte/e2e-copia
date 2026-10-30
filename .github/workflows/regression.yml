@@ -1,0 +1,723 @@
+name: Playwright Regression Tests on Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      cycle:
+        description: "Cycle name in Zephyr"
+        required: true
+        type: string
+        default: "Regression Test Suite"
+      project:
+        description: "Project key in Zephyr"
+        required: true
+        type: string
+        default: "QA"
+      tag_preset:
+        description: "Test suite to run."
+        required: false
+        default: regression
+        type: choice
+        options:
+          - regression
+          - smoke
+          - api
+          - checkout
+          - checkout_base
+          - checkout_qsr
+          - payment_widget
+          - elements_link
+          - admin
+          - admin_smoke
+          - vault
+          - installments
+          - fraud
+          - settlement
+          - critical_e2e
+          - visual
+          - team_payment_integration
+          - team_enterprise
+          - team_admin
+          - team_platform
+          - team_payconnect
+          - team_payments_capabilities
+      exclude_tags:
+        description: "Tags to skip, e.g. @flaky or @flaky|@fixme_preprod. Applies to any suite."
+        required: false
+        default: ""
+        type: string
+      enable_multimedia_report:
+        description: "Enable video and screenshot in reports (default: false). NOTE: trace is always ON because ai-heal depends on it to enrich failed cases with browser network calls."
+        required: false
+        default: false
+        type: boolean
+      enable_ai_analysis:
+        description: "ENABLE AI ANALYSIS - run ai-heal on failed tests. Unchecking skips the job entirely: no CSV or telemetry artifact, and no PRs/Issues opened by ai-heal."
+        required: false
+        default: true
+        type: boolean
+      url_checkout_base:
+        description: "Custom domain for checkout-base widget (e.g.
+          https://my-preview.deuna.io)"
+        required: false
+        default: ""
+        type: string
+      url_elements_link:
+        description: "Custom domain for elements-link widget (e.g.
+          https://my-elements-preview.deuna.io)"
+        required: false
+        default: ""
+        type: string
+      e2e_testing_ref:
+        description: "Branch or ref of e2e-testing to checkout (default: default branch)"
+        required: false
+        default: ""
+        type: string
+      skip_health_check:
+        description: "Temporarily skip healthcheck gate for infra capacity validation only"
+        required: false
+        default: false
+        type: boolean
+      playwright_retries:
+        description: "Per-shard Playwright retries before the global retry/reporting phase"
+        required: false
+        default: 1
+        type: number
+      max_retries:
+        description: "Global retry rounds for failed tests after primary report merge"
+        required: false
+        default: 1
+        type: number
+      primary_shard_multiplier:
+        description: "Primary run work units per runner slot"
+        required: false
+        default: 4
+        type: number
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+jobs:
+  resolve-selection:
+    name: Resolve tag selection
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      grep: ${{ steps.resolve.outputs.grep }}
+      grep_invert: ${{ steps.resolve.outputs.grep_invert }}
+      label: ${{ steps.resolve.outputs.label }}
+      test_count: ${{ steps.preflight.outputs.test_count }}
+      runner_slots: ${{ steps.preflight.outputs.runner_slots }}
+      shard_multiplier: ${{ steps.preflight.outputs.shard_multiplier }}
+    steps:
+      - name: Resolve grep expressions
+        id: resolve
+        env:
+          PRESET: ${{ inputs.tag_preset }}
+          EXCLUDE: ${{ inputs.exclude_tags }}
+        run: |
+          set -euo pipefail
+
+          RAW="@${PRESET}"
+          RAW_INVERT="$EXCLUDE"
+
+          # 2. Validate the raw, user-supplied text. This runs BEFORE the
+          # anchoring below, because the anchor introduces characters this
+          # whitelist deliberately rejects ([, ], backslash). Validating first
+          # keeps the guard strict on human input without rejecting our own.
+          for VALUE in "$RAW" "$RAW_INVERT"; do
+            if [ -n "$VALUE" ] && ! printf '%s' "$VALUE" | grep -Eq '^[@A-Za-z0-9_|()!?.:*+ -]+$'; then
+              echo "::error::Disallowed characters in expression: $VALUE"
+              exit 1
+            fi
+          done
+
+          # 3. Human-readable label, built from the raw text so Slack and
+          # meta.json show '@admin' rather than the anchored pattern.
+          LABEL="$RAW"
+          if [ -n "$RAW_INVERT" ]; then
+            LABEL="$RAW (excluding $RAW_INVERT)"
+          fi
+
+          # 4. Anchor dropdown presets. --grep is a regex matched as a
+          # substring, so a bare '@admin' also matches '@admin_smoke',
+          # '@admin_connection' and '@admin-preprod' (264 tests instead of
+          # 137). The negative lookahead rejects a following word character or
+          # hyphen. ':' is neither, so titles like '@regression: description'
+          # still match. The exclusion is left unanchored: it is free text and
+          # whoever types it wants exact control over it.
+          GREP="$RAW"'(?![\w-])'
+          GREP_INVERT="$RAW_INVERT"
+
+          echo "grep=$GREP" >> "$GITHUB_OUTPUT"
+          echo "grep_invert=$GREP_INVERT" >> "$GITHUB_OUTPUT"
+          echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout e2e-testing
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.e2e_testing_ref || github.ref_name }}
+
+      # Nobody picks whether a run is official: the e2e-dashboard infers it,
+      # mainly from the dispatch branch (release/v*). This only says up front
+      # how the run will be counted. The release name and the tested commit
+      # come from the regression_tests.yml outputs, not from here.
+      - name: Explain the e2e-dashboard classification
+        env:
+          CYCLE: ${{ inputs.cycle || 'Test Suite' }}
+          TAG_PRESET: ${{ inputs.tag_preset }}
+          REF_NAME: ${{ github.ref_name }}
+          TESTS_REF: ${{ inputs.e2e_testing_ref }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Run provenance"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Dispatch branch | \`${REF_NAME}\` |"
+            echo "| Tests ref | \`${TESTS_REF:-(dispatch branch)}\` |"
+            echo "| Cycle | \`${CYCLE}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$TAG_PRESET" = "regression" ] && printf '%s' "$REF_NAME" | grep -Eq '^release/v[0-9]+(\.[0-9]+)*$'; then
+            echo "::notice::Regression dispatched from ${REF_NAME}: the e2e-dashboard will count it as the official regression of cycle '${CYCLE}' unless an override was used (e2e_testing_ref, skipped health check, custom widget URLs, AI analysis off). If this is only a validation run, ask QA to mark it unofficial in Run Classification."
+          else
+            echo "::notice::This run will be listed as unofficial in the e2e-dashboard: only the regression suite dispatched from a release/v* branch counts as official."
+          fi
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # PayPal caps an app at 10 webhooks and DEUNA registers one per payment
+      # processor, so dev, staging, preprod and every local run compete for the
+      # same 10 slots. The backend deletes the webhook on a best-effort basis:
+      # when that call fails the processor row goes away and the webhook stays,
+      # which is how the app reached 10/10 orphans on 2026-09-18 and blocked
+      # every PayPal Wallet test.
+      #
+      # This job is the only place in the pipeline that runs once for the whole
+      # run instead of once per shard, which is what this needs — globalSetup
+      # runs per shard. It is deliberately not scoped to one host: a webhook is
+      # only deleted when its processor is gone from that environment's own
+      # database, so cleaning another environment's orphans is safe and is what
+      # frees the slots this run needs.
+      #
+      # Never fails the regression: no free slot is worse than a stale report,
+      # but neither is a reason to stop the suite from starting.
+      - name: Free orphaned PayPal webhook slots
+        continue-on-error: true
+        env:
+          METABASE_USER: ${{ secrets.METABASE_USER }}
+          METABASE_PASSWORD: ${{ secrets.METABASE_PASSWORD }}
+          PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+          PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
+        run: |
+          set -uo pipefail
+          npm run paypal:janitor -- --delete | tee /tmp/paypal-janitor.log
+          {
+            echo "### PayPal webhook slots"
+            echo ""
+            echo '```'
+            grep -E 'slots used|ACTIVE:|Freed|SLOTS_IN_USE' /tmp/paypal-janitor.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preflight - count selected tests
+        id: preflight
+        env:
+          GREP_EXPR: ${{ steps.resolve.outputs.grep }}
+          GREP_INVERT_EXPR: ${{ steps.resolve.outputs.grep_invert }}
+          # runner_slots is pinned to 20 in the call to the reusable workflow.
+          RUNNER_SLOTS: "20"
+          MULTIPLIER: ${{ inputs.primary_shard_multiplier }}
+        run: |
+          set -uo pipefail
+          case "${MULTIPLIER:-}" in ''|*[!0-9]*) MULTIPLIER=4 ;; esac
+          PLANNED_SHARDS=$(( RUNNER_SLOTS * MULTIPLIER ))
+
+          ARGS=()
+          [ -n "${GREP_EXPR}" ] && ARGS+=(--grep "${GREP_EXPR}")
+          [ -n "${GREP_INVERT_EXPR}" ] && ARGS+=(--grep-invert "${GREP_INVERT_EXPR}")
+
+          # --list collects without executing. It costs seconds and avoids
+          # spinning up 80 self-hosted runners for a mistyped expression.
+          # JSON goes to a file via PLAYWRIGHT_JSON_OUTPUT_NAME because this
+          # repo's config prints dotenv lines to stdout ahead of the JSON.
+          PLAYWRIGHT_JSON_OUTPUT_NAME=selection.json \
+            npx playwright test "${ARGS[@]}" --project=chromium --list --reporter=json > selection.log 2>&1 || true
+
+          # Specs from the 'setup' project (*.setup.ts) are dropped: they are a
+          # dependency of the chromium project, not part of the requested selection.
+          COUNT=$(jq '[.suites[]? | recurse(.suites[]?) | select((.file // "") | test("\\.setup\\.ts$") | not) | .specs[]?] | length' selection.json 2>/dev/null || echo 0)
+          COUNT=${COUNT:-0}
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "### Test selection" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No test matches \`${GREP_EXPR}\`." >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::0 tests match the selection. Check the tag before retrying."
+            tail -20 selection.log || true
+            exit 1
+          fi
+          
+          EFFECTIVE_TOTAL=$PLANNED_SHARDS
+          [ "$COUNT" -lt "$EFFECTIVE_TOTAL" ] && EFFECTIVE_TOTAL=$COUNT
+          SLOTS=$RUNNER_SLOTS
+          [ "$EFFECTIVE_TOTAL" -lt "$SLOTS" ] && SLOTS=$EFFECTIVE_TOTAL
+          [ "$SLOTS" -lt 1 ] && SLOTS=1
+          MULT=$(( EFFECTIVE_TOTAL / SLOTS ))
+          [ "$MULT" -lt 1 ] && MULT=1
+          EFFECTIVE_TOTAL=$(( SLOTS * MULT ))
+
+          {
+            echo "### Test selection"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| \`--grep\` | \`${GREP_EXPR:-(none)}\` |"
+            echo "| \`--grep-invert\` | \`${GREP_INVERT_EXPR:-(none)}\` |"
+            echo "| Selected tests | **${COUNT}** |"
+            echo "| Requested shards | ${PLANNED_SHARDS} |"
+            echo "| Effective shards | **${EFFECTIVE_TOTAL}** (${SLOTS} slots x ${MULT}) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$EFFECTIVE_TOTAL" -lt "$PLANNED_SHARDS" ]; then
+            echo "::notice::Sharding scaled down to ${EFFECTIVE_TOTAL} for ${COUNT} tests (requested ${PLANNED_SHARDS})."
+          fi
+
+          echo "test_count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "runner_slots=$SLOTS" >> "$GITHUB_OUTPUT"
+          echo "shard_multiplier=$MULT" >> "$GITHUB_OUTPUT"
+
+      # The list of everything this run was supposed to execute, kept for the
+      # reconciliation job at the end. It is the only source that survives a
+      # shard dying mid-run: a shard that never reports leaves no trace in the
+      # merged report, so without this list its tests are invisible and silently
+      # read as NO EXECUTED on the Zephyr board.
+      - name: Upload test selection
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-selection
+          path: selection.json
+          retention-days: 7
+          if-no-files-found: error
+
+  call-regression-tests:
+    name: Run Test Suite (Staging)
+    needs: resolve-selection
+    # TODO(revert before merging): temporary pin to the engine's working branch.
+    # Must go back to @main once the regression_tests.yml change lands on main.
+    # A feature branch here breaks the whole regression the day it gets deleted.
+    uses: DUNA-E-Commmerce/github-actions/.github/workflows/regression_tests.yml@main
+    secrets: inherit
+    with:
+      publish_zephyr: true
+      project: ${{ inputs.project || 'QA' }}
+      environment: "STAGING"
+      cycle: ${{ inputs.cycle || 'Test Suite' }}
+      runner_slots: ${{ fromJSON(needs.resolve-selection.outputs.runner_slots) }}
+      primary_shard_multiplier: ${{ fromJSON(needs.resolve-selection.outputs.shard_multiplier) }}
+      playwright_workers: 6
+      max_retries: ${{ fromJSON(inputs.max_retries) }}
+      report_transport: s3
+      reports_bucket: deuna-sre-e2e-platform
+      skip_health_check: ${{ inputs.skip_health_check }}
+      enable_ai_analysis: ${{ inputs.enable_ai_analysis }}
+      grep: ${{ needs.resolve-selection.outputs.grep }}
+      grep_invert: ${{ needs.resolve-selection.outputs.grep_invert }}
+      playwright_retries: ${{ fromJSON(inputs.playwright_retries) }}
+      enable_multimedia: ${{ inputs.enable_multimedia_report }}
+      url_checkout_base: ${{ inputs.url_checkout_base }}
+      url_elements_link: ${{ inputs.url_elements_link }}
+      e2e_testing_ref: ${{ inputs.e2e_testing_ref }}
+      # The merchant pool, the single-use stock and the shared admin session have no inputs: they
+      # always run. To turn the pool or the stock off, see scripts/merchant-pool/config.ts.
+
+  publish-to-dashboard:
+    name: Publish reports to e2e-dashboard
+    # After the Slack notification, so meta.json can record when the results
+    # reached QA (results_published_at). always() keeps the publish running
+    # when the notification fails or is skipped.
+    needs: [call-regression-tests, resolve-selection, notify-slack]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: us-east-2
+      BUCKET: deuna-sre-e2e-platform
+    steps:
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::023726431494:role/E2EDashboardGHAPublisher
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check available GitHub artifacts
+        id: artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate)
+          has_artifact() {
+            echo "$ARTIFACTS" | jq -e --arg name "$1" '.artifacts[]? | select(.name == $name)' >/dev/null
+          }
+
+          if has_artifact "playwright-report"; then
+            echo "playwright_report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "playwright_report=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          CSV_NAME="${{ needs.call-regression-tests.outputs.csv_artifact }}"
+          if [ -n "$CSV_NAME" ] && has_artifact "$CSV_NAME"; then
+            echo "ai_csv=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ai_csv=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download HTML report
+        if: steps.artifacts.outputs.playwright_report == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: ./playwright-report
+
+      - name: Download AI-processed CSV
+        if: steps.artifacts.outputs.ai_csv == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.call-regression-tests.outputs.csv_artifact }}
+          path: ./ai-processed
+
+      - name: Compute prefix and write meta.json
+        id: meta
+        # Every value reaches the script through the environment and jq, never
+        # through ${{ }} interpolation into the script body: cycle names, grep
+        # expressions and URLs are free text and must not be able to break the
+        # JSON, or the shell.
+        env:
+          GHA_RUN_ID: ${{ github.run_id }}
+          GHA_RUN_ATTEMPT: ${{ github.run_attempt }}
+          RELEASE_CYCLE: ${{ inputs.cycle || 'Test Suite' }}
+          RELEASE: ${{ needs.call-regression-tests.outputs.release_slug }}
+          ACTOR: ${{ github.actor }}
+          TRIGGER_TYPE: ${{ needs.resolve-selection.outputs.label }}
+          TAG_PRESET: ${{ inputs.tag_preset }}
+          GREP_EXPR: ${{ needs.resolve-selection.outputs.grep }}
+          GREP_INVERT_EXPR: ${{ needs.resolve-selection.outputs.grep_invert }}
+          TEST_COUNT: ${{ needs.resolve-selection.outputs.test_count }}
+          REPOSITORY: ${{ github.repository }}
+          WORKFLOW_REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+          TESTS_REF: ${{ inputs.e2e_testing_ref }}
+          TESTS_SHA: ${{ needs.call-regression-tests.outputs.tests_sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+          SKIP_HEALTH_CHECK: ${{ inputs.skip_health_check }}
+          URL_CHECKOUT_BASE: ${{ inputs.url_checkout_base }}
+          URL_ELEMENTS_LINK: ${{ inputs.url_elements_link }}
+          ENABLE_AI_ANALYSIS: ${{ inputs.enable_ai_analysis }}
+          MAX_RETRIES: ${{ inputs.max_retries }}
+          PLAYWRIGHT_RETRIES: ${{ inputs.playwright_retries }}
+          PRIMARY_SHARD_MULTIPLIER: ${{ inputs.primary_shard_multiplier }}
+          REPORTS_PREFIX: ${{ needs.call-regression-tests.outputs.reports_prefix }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PREFIX="$REPORTS_PREFIX"
+          if [ -z "$PREFIX" ]; then
+            DATE=$(date -u +%Y-%m-%d)
+            PREFIX="runs/${DATE}/${GHA_RUN_ID}/attempt-${GHA_RUN_ATTEMPT}"
+          fi
+
+          if ! aws s3 ls "s3://${BUCKET}/${PREFIX}/blob/" >/dev/null; then
+            echo "No blob report payloads found in s3://${BUCKET}/${PREFIX}/blob/; skipping dashboard publish."
+            echo "has_reports=false" >> "$GITHUB_OUTPUT"
+            echo "prefix=${PREFIX}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "has_reports=true" >> "$GITHUB_OUTPUT"
+          echo "prefix=${PREFIX}" >> "$GITHUB_OUTPUT"
+
+          STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          FINISHED_AT="$STARTED_AT"
+          REPORT_STATS=$(mktemp)
+          if aws s3 cp "s3://${BUCKET}/${PREFIX}/json/primary/test-results.json" "$REPORT_STATS" --no-progress; then
+            read -r STARTED_AT FINISHED_AT < <(python3 - "$REPORT_STATS" <<'PY'
+          import datetime
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as report:
+              stats = json.load(report).get("stats", {})
+
+          started_raw = stats.get("startTime")
+          duration_ms = float(stats.get("duration") or 0)
+          started = datetime.datetime.fromisoformat(started_raw.replace("Z", "+00:00"))
+          finished = started + datetime.timedelta(milliseconds=duration_ms)
+          print(started.strftime("%Y-%m-%dT%H:%M:%SZ"), finished.strftime("%Y-%m-%dT%H:%M:%SZ"))
+          PY
+            )
+          else
+            echo "Unable to read merged Playwright JSON stats; using publish timestamp for dashboard meta." >&2
+          fi
+
+          # The whole workflow as QA lives it, for the dashboard's "Real-time
+          # execution": this attempt's start, and the moment the results were
+          # posted to Slack. started_at/finished_at above only span the
+          # Playwright primary wave. Both are best effort: an API hiccup
+          # leaves them empty (and the dashboard shows "—") rather than
+          # failing the publish.
+          WORKFLOW_STARTED_AT=$(gh api "repos/${REPOSITORY}/actions/runs/${GHA_RUN_ID}/attempts/${GHA_RUN_ATTEMPT}" \
+            --jq '.run_started_at // empty' 2>/dev/null || true)
+          RESULTS_PUBLISHED_AT=$(gh api --paginate "repos/${REPOSITORY}/actions/runs/${GHA_RUN_ID}/attempts/${GHA_RUN_ATTEMPT}/jobs?per_page=100" \
+            --jq '.jobs[] | select(.name == "Notify Slack Results" and .conclusion == "success") | .completed_at // empty' 2>/dev/null | head -n1 || true)
+          if [ -z "$RESULTS_PUBLISHED_AT" ]; then
+            RESULTS_PUBLISHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          fi
+
+          # meta.json schema v2: the original fields plus the run's provenance,
+          # which the e2e-dashboard uses to decide whether this run is the
+          # official regression of its release. Keep in sync with
+          # sre-dev-portal services/e2e-dashboard (internal/ingest/meta_test.go).
+          jq -n \
+            --arg gha_run_id "${GHA_RUN_ID}-${GHA_RUN_ATTEMPT}" \
+            --arg github_run_id "$GHA_RUN_ID" \
+            --arg github_run_attempt "$GHA_RUN_ATTEMPT" \
+            --arg release_cycle "$RELEASE_CYCLE" \
+            --arg release "$RELEASE" \
+            --arg commit_sha "${TESTS_SHA:-$WORKFLOW_SHA}" \
+            --arg actor "$ACTOR" \
+            --arg trigger_type "$TRIGGER_TYPE" \
+            --arg started_at "$STARTED_AT" \
+            --arg finished_at "$FINISHED_AT" \
+            --arg workflow_started_at "$WORKFLOW_STARTED_AT" \
+            --arg results_published_at "$RESULTS_PUBLISHED_AT" \
+            --arg html_report_url "s3://${BUCKET}/${PREFIX}/html/index.html" \
+            --arg tag_preset "$TAG_PRESET" \
+            --arg grep "$GREP_EXPR" \
+            --arg grep_invert "$GREP_INVERT_EXPR" \
+            --argjson test_count "${TEST_COUNT:-0}" \
+            --arg repository "$REPOSITORY" \
+            --arg workflow_ref "$WORKFLOW_REF" \
+            --arg workflow_sha "$WORKFLOW_SHA" \
+            --arg tests_ref "$TESTS_REF" \
+            --arg tests_sha "$TESTS_SHA" \
+            --arg run_url "$RUN_URL" \
+            --argjson skip_health_check "${SKIP_HEALTH_CHECK:-false}" \
+            --arg url_checkout_base "$URL_CHECKOUT_BASE" \
+            --arg url_elements_link "$URL_ELEMENTS_LINK" \
+            --argjson enable_ai_analysis "${ENABLE_AI_ANALYSIS:-false}" \
+            --argjson max_retries "${MAX_RETRIES:-0}" \
+            --argjson playwright_retries "${PLAYWRIGHT_RETRIES:-0}" \
+            --argjson primary_shard_multiplier "${PRIMARY_SHARD_MULTIPLIER:-0}" \
+            '{
+              schema_version: 2,
+              gha_run_id: $gha_run_id,
+              github_run_id: $github_run_id,
+              github_run_attempt: $github_run_attempt,
+              release_cycle: $release_cycle,
+              release: $release,
+              environment: "STAGING",
+              commit_sha: $commit_sha,
+              actor: $actor,
+              trigger_type: $trigger_type,
+              started_at: $started_at,
+              finished_at: $finished_at,
+              # null, not "", when unknown: the dashboard reads null as "no
+              # span" and would fail to ingest an empty timestamp.
+              workflow_started_at: (if $workflow_started_at == "" then null else $workflow_started_at end),
+              results_published_at: (if $results_published_at == "" then null else $results_published_at end),
+              html_report_url: $html_report_url,
+              selection: {
+                tag_preset: $tag_preset,
+                label: $trigger_type,
+                grep: $grep,
+                grep_invert: $grep_invert,
+                test_count: $test_count
+              },
+              source: {
+                repository: $repository,
+                workflow_ref: $workflow_ref,
+                workflow_sha: $workflow_sha,
+                tests_ref: $tests_ref,
+                tests_sha: $tests_sha,
+                run_url: $run_url
+              },
+              overrides: {
+                skip_health_check: $skip_health_check,
+                url_checkout_base: $url_checkout_base,
+                url_elements_link: $url_elements_link,
+                enable_ai_analysis: $enable_ai_analysis,
+                max_retries: $max_retries,
+                playwright_retries: $playwright_retries,
+                primary_shard_multiplier: $primary_shard_multiplier
+              }
+            }' > meta.json
+
+      - name: Upload html + AI csv
+        if: steps.meta.outputs.has_reports == 'true'
+        run: |
+          set -euo pipefail
+          if [ -d ./playwright-report ]; then
+            find ./playwright-report -type f -print0 | while IFS= read -r -d '' file; do
+              key="${file#./playwright-report/}"
+              aws s3 cp "$file" "s3://${BUCKET}/${{ steps.meta.outputs.prefix }}/html/${key}" --no-progress
+            done
+          fi
+          CSV_FILE=""
+          if [ -d ./ai-processed ]; then
+            CSV_FILE=$(find ./ai-processed -type f -name '*.csv' | head -n1)
+          fi
+          if [ -n "$CSV_FILE" ]; then
+            aws s3 cp "$CSV_FILE" "s3://${BUCKET}/${{ steps.meta.outputs.prefix }}/ai-processed/release.csv" --no-progress
+          fi
+
+      - name: Upload meta.json
+        if: steps.meta.outputs.has_reports == 'true'
+        run: aws s3 cp meta.json "s3://${BUCKET}/${{ steps.meta.outputs.prefix }}/meta.json"
+
+  notify-slack:
+    name: Notify Slack Results
+    needs: [call-regression-tests, resolve-selection]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Check available failed-report artifacts
+        id: artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --paginate)
+          has_artifact() {
+            echo "$ARTIFACTS" | jq -e --arg name "$1" '.artifacts[]? | select(.name == $name)' >/dev/null
+          }
+
+          for name in \
+            playwright-json-report-retry-failed-r3 \
+            playwright-json-report-retry-failed-r2 \
+            playwright-json-report-retry-failed-r1 \
+            playwright-json-report-failed; do
+            key=$(echo "$name" | tr '-' '_')
+            if has_artifact "$name"; then
+              echo "${key}=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "${key}=false" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+      - name: Download retry failed tests report (round 3)
+        if: steps.artifacts.outputs.playwright_json_report_retry_failed_r3 == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-json-report-retry-failed-r3
+          path: ./failed-report/retry-r3
+
+      - name: Download retry failed tests report (round 2)
+        if: steps.artifacts.outputs.playwright_json_report_retry_failed_r2 == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-json-report-retry-failed-r2
+          path: ./failed-report/retry-r2
+
+      - name: Download retry failed tests report (round 1)
+        if: steps.artifacts.outputs.playwright_json_report_retry_failed_r1 == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-json-report-retry-failed-r1
+          path: ./failed-report/retry-r1
+
+      - name: Download primary failed tests report
+        if: steps.artifacts.outputs.playwright_json_report_failed == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-json-report-failed
+          path: ./failed-report/primary
+
+      - name: Count failed tests
+        id: count
+        run: |
+          REPORT=""
+          for candidate in \
+            ./failed-report/retry-r3/failed-tests.json \
+            ./failed-report/retry-r2/failed-tests.json \
+            ./failed-report/retry-r1/failed-tests.json \
+            ./failed-report/primary/failed-tests.json; do
+            if [ -f "$candidate" ]; then
+              REPORT="$candidate"
+              break
+            fi
+          done
+
+          COUNT=0
+          if [ -n "$REPORT" ]; then
+            COUNT=$(jq '[.. | objects | select(has("specs")) | .specs[]?] | length' "$REPORT" 2>/dev/null || echo "0")
+          fi
+          echo "Using failed report: ${REPORT:-none}"
+          echo "failed_count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Get CSV artifact download URL
+        id: csv
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CSV_NAME="${{ needs.call-regression-tests.outputs.csv_artifact }}"
+          CSV_BUTTON=""
+          if [ -n "$CSV_NAME" ]; then
+            ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts \
+              --jq ".artifacts[] | select(.name == \"$CSV_NAME\") | .id")
+            if [ -n "$ARTIFACT_ID" ]; then
+              URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${ARTIFACT_ID}"
+              CSV_BUTTON=$(printf ',{"type":"button","text":{"type":"plain_text","text":"Download AI CSV"},"url":"%s"}' "$URL")
+            fi
+          fi
+          echo "csv_button=$CSV_BUTTON" >> $GITHUB_OUTPUT
+
+      - name: Send custom Slack message
+        uses: slackapi/slack-github-action@v3.0.3
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_PLAYWRIGHT_AUTOMATION_BOT }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_REGRESSION_CHANNEL_ID }}",
+              "text": "${{ needs.call-regression-tests.result == 'success' && '🟢' || '🔴' }} Playwright Tests · ${{ needs.resolve-selection.outputs.label }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ needs.call-regression-tests.result == 'success' && '🟢' || '🔴' }} *Playwright Tests*\n*Selection:* `${{ needs.resolve-selection.outputs.label }}` (${{ needs.resolve-selection.outputs.test_count || '?' }} tests)\n*Zephyr Cycle:* <https://deuna.atlassian.net/projects/${{ inputs.project }}?selectedItem=com.atlassian.plugins.atlassian-connect-plugin:com.kanoah.test-manager__main-project-page#!/v2/testCycle/${{ needs.call-regression-tests.outputs.test_cycle_id }}|${{ needs.call-regression-tests.outputs.test_cycle_id }}>\n*Failed tests:* ${{ steps.count.outputs.failed_count || '0' }}\n*Blocked tests:* ${{ needs.call-regression-tests.outputs.blocked_count || '?' }}\n*Actor:* ${{ github.actor }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Action Details"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                      "style": "primary"
+                    }${{ steps.csv.outputs.csv_button }}
+                  ]
+                }
+              ]
+            }

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>jul-IA-N · Pipeline (vista ejecutiva)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter','Segoe UI',system-ui,sans-serif; background:#f8fafc; color:#0f172a; }
+    header { padding: 24px 32px 14px; border-bottom: 1px solid #e2e8f0; background:#fff; }
+    header h1 { margin:0; font-size:24px; }
+    header p { margin:6px 0 0; color:#64748b; font-size:14px; }
+    .legend { display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-size:13px; }
+    .legend span { display:inline-flex; align-items:center; gap:7px; }
+    .chip { width:16px; height:16px; border-radius:4px; border:2px solid; display:inline-block; }
+    .c-llm { background:#fde68a; border-color:#d97706; }
+    .c-mem { background:#fbcfe8; border-color:#db2777; }
+    .c-agent { background:#f0fdfa; border-color:#0d9488; }
+    .c-agentic { background:#ccfbf1; border-color:#0f766e; }
+    .c-verify { background:#dbeafe; border-color:#2563eb; }
+    .toolbar { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+    button { font-size:13px; padding:7px 14px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-weight:600; color:#334155; }
+    button:hover { background:#f1f5f9; }
+    .diagram-wrap { padding:24px; overflow:auto; }
+    .mermaid { display:flex; justify-content:center; }
+    footer { padding:8px 32px 24px; color:#94a3b8; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>jul-IA-N · Auto-heal de E2E — vista ejecutiva</h1>
+    <p>De una regresión fallida a un PR verificado, en 5 grandes pasos. Las cajas con 🧠 usan un LLM; 🔁 = subagente agéntico (razona con herramientas). Si el caso <b>ya se vio antes</b> (match exacto en el knowledge base), reutiliza la solución guardada y <b>salta el razonamiento LLM</b>. Varios casos se procesan en paralelo para acortar el tiempo total.</p>
+    <div class="legend">
+      <span><i class="chip c-llm"></i> Razonamiento con LLM 🧠</span>
+      <span><i class="chip c-mem"></i> Memoria / knowledge base</span>
+      <span><i class="chip c-agent"></i> Subagente especializado</span>
+      <span><i class="chip c-agentic"></i> Subagente agéntico 🔁</span>
+      <span><i class="chip c-verify"></i> Verificación automática</span>
+    </div>
+    <div class="toolbar">
+      <button onclick="downloadSvg()">⬇ Descargar SVG</button>
+      <button onclick="window.print()">🖨 Imprimir / PDF</button>
+    </div>
+  </header>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Inter,Segoe UI,sans-serif','fontSize':'16px'}}}%%
+flowchart TD
+    START(["🔴 Regresión con tests fallidos<br/><i>resultados de Playwright</i>"]):::input
+
+    UNDERSTAND["<b>1 · Entender el fallo</b> 🧠<br/>clasifica cada caso: causa raíz,<br/>equipo dueño, paso que rompió"]:::llm
+
+    MEMORY["<b>2 · Memoria + deduplicación</b><br/>agrupa fallos iguales y reutiliza<br/>soluciones ya conocidas (knowledge base,<br/>preparada una sola vez por corrida)"]:::mem
+
+    KBHIT{"¿ya lo vimos?<br/>match exacto en el KB"}:::decision
+    APPLYKB["<b>fix conocido</b><br/>aplica la solución guardada<br/><b>salta el razonamiento LLM</b>"]:::mem
+    KNOWNISSUE["<b>issue externo conocido</b><br/>marca 'known issue', sin acción<br/><b>salida directa</b> (sin LLM ni verify)"]:::mem
+
+    DECIDE["<b>3 · Orquestador — decide</b> 🧠<br/>¿es bug del test o del servicio?<br/>elige <b>el especialista</b> adecuado<br/>y mide su confianza"]:::llm
+
+    GATE{"¿confianza<br/>suficiente?"}:::decision
+    HUMAN["🙋 Triage humano<br/>(casos dudosos)"]:::human
+
+    subgraph TEAM["4 · Equipo de subagentes (12) — cada uno una especialidad · varios casos en paralelo"]
+        direction LR
+        subgraph G1["Datos y configuración"]
+            direction TB
+            credentialsFixer["credentialsFixer<br/><i>credenciales del PSP/entorno</i>"]:::agent
+            testDataFixer["testDataFixer<br/><i>datos de prueba (montos, emails)</i>"]:::agent
+            cardFixer["cardFixer<br/><i>tarjetas de prueba</i>"]:::agent
+            payloadFixer["payloadFixer<br/><i>payloads de request</i>"]:::agent
+        end
+        subgraph G2["UI y flujos de pago"]
+            direction TB
+            selectorFixer["selectorFixer<br/><i>selectores / locators</i>"]:::agent
+            assertFixer["assertFixer 🔁<br/><i>aserciones (agéntico)</i>"]:::agentic
+            snapshotUpdater["snapshotUpdater<br/><i>regresión visual</i>"]:::agent
+            redirectInvestigator["redirectInvestigator<br/><i>redirecciones externas</i>"]:::agent
+            rateLimitHandler["rateLimitHandler<br/><i>límites de tasa / 429</i>"]:::agent
+        end
+        subgraph G3["Servicio y clasificación"]
+            direction TB
+            serviceInvestigator["serviceInvestigator 🔁<br/><i>bug de backend (agéntico, CloudWatch)</i>"]:::agentic
+            infraMarker["infraMarker<br/><i>problemas de infraestructura</i>"]:::agent
+            humanEscalator["humanEscalator<br/><i>escala a un humano</i>"]:::agent
+        end
+    end
+
+    VERIFY["<b>5 · Verificación automática</b><br/>aplica el fix y corre el test 3×<br/><i>ningún cambio pasa sin re-run verde</i>"]:::verify
+
+    OUT(["✅ Resultado<br/><b>PR</b> · <b>Issue</b> · espera humano<br/>+ reporte (CSV / telemetría)"]):::output
+
+    START --> UNDERSTAND --> MEMORY --> KBHIT
+    KBHIT -->|fix conocido| APPLYKB --> VERIFY
+    KBHIT -->|issue externo| KNOWNISSUE --> OUT
+    KBHIT -->|caso nuevo| DECIDE --> GATE
+    GATE -->|no| HUMAN
+    GATE -->|sí| TEAM
+    TEAM --> VERIFY --> OUT
+
+    classDef input fill:#7f1d1d,stroke:#450a0a,color:#fff,font-weight:bold
+    classDef output fill:#14532d,stroke:#052e16,color:#fff,font-weight:bold
+    classDef llm fill:#fde68a,stroke:#d97706,color:#7c2d12,stroke-width:2px,font-weight:bold
+    classDef mem fill:#fbcfe8,stroke:#db2777,color:#831843
+    classDef decision fill:#e9d5ff,stroke:#7c3aed,color:#4c1d95,font-weight:bold
+    classDef human fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    classDef verify fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,font-weight:bold
+    classDef agent fill:#f0fdfa,stroke:#0d9488,color:#134e4a
+    classDef agentic fill:#ccfbf1,stroke:#0f766e,color:#134e4a,stroke-width:2px,font-weight:bold
+    style TEAM fill:#f8fafc,stroke:#0d9488,stroke-width:2px
+    style G1 fill:#ffffff,stroke:#cbd5e1
+    style G2 fill:#ffffff,stroke:#cbd5e1
+    style G3 fill:#ffffff,stroke:#cbd5e1
+    </pre>
+  </div>
+
+  <footer>
+    12 subagentes especializados; el orquestador elige <b>uno</b> por caso. Hoy operan como agénticos <code>assertFixer</code> y <code>serviceInvestigator</code> (🔁, razonan con herramientas read-only); el resto (10) es single-shot.
+  </footer>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', flowchart: { useMaxWidth: false, htmlLabels: true } });
+    window.downloadSvg = () => {
+      const svg = document.querySelector('.mermaid svg');
+      if (!svg) return alert('El diagrama aún no se ha renderizado.');
+      const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'jul-IA-N-pipeline-ejecutivo.svg';
+      a.click();
+    };
+  </script>
+</body>
+</html>

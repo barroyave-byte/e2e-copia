@@ -1,0 +1,11 @@
+{
+  "psp": "clicktopay",
+  "cards": [
+    {
+      "variableName": "clickToPayMastercardSuccess",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    }
+  ]
+}

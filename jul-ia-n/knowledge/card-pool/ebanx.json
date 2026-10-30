@@ -1,0 +1,17 @@
+{
+  "psp": "ebanx",
+  "cards": [
+    {
+      "variableName": "ebanxVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "ebanxDebitCardSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    }
+  ]
+}

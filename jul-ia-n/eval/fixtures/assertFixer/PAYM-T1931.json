@@ -1,0 +1,51 @@
+{
+  "_subagent": "assertFixer",
+  "_note": "Real case (team_payments_capabilities). Multi-decline traceability scenario: 'expected true but got false' validating trace logs. Low-signal boolean assertion. Expected behavior: assertFixer reads the spec + assertTraceLogs usage, finds it cannot conclusively tell whether the expected trace messages are stale or the trace service failed to log them, and returns kind=enrichment_only — ideally flagging this as a possible traceability gap (serviceInvestigator territory). Evidence (stderr/network) reconstructed from the CSV row — not a captured trace.",
+  "testCaseId": "PAYM-T1931",
+  "testDescription": "Log Order TC + 1 procesador + rechazada + cambio PM (TC) + 1 procesador + rechazada",
+  "teamOwner": "team_payments_capabilities",
+  "errorIdentified": "Assertion failed: expected true but got false.",
+  "rootCause": "Traceability logging/validation did not produce the expected condition for the multi-decline scenario.",
+  "rootCauseCategory": "assertion_mismatch",
+  "isCredentialIssue": false,
+  "failedStep": "Validate that the order has been denied",
+  "specFile": "playwright/tests/traceability/PAYM-T1931.spec.ts",
+  "specLine": 73,
+  "tags": ["@regression", "@fixme_trace_preprod", "@team_payments_capabilities"],
+  "orderId": "ord_mx_7c1f9a2e4b6d",
+  "transactionId": "ord_mx_7c1f9a2e4b6d",
+  "xRequestIds": ["a9f8e7d6-1111-4222-8333-abcdef012345"],
+  "networkCalls": [
+    {
+      "url": "https://api.deuna.io/orders/ord_mx_7c1f9a2e4b6d/purchase",
+      "method": "POST",
+      "status": 422,
+      "xRequestId": "a9f8e7d6-1111-4222-8333-abcdef012345",
+      "responseSnippet": "{\"order\":{\"status\":\"denied\"},\"error\":{\"code\":\"DP-3001\",\"message\":\"transaction declined\"}}",
+      "durationMs": 1203
+    },
+    {
+      "url": "https://trace-api.deuna.io/transactions/ord_mx_7c1f9a2e4b6d/logs",
+      "method": "GET",
+      "status": 200,
+      "xRequestId": null,
+      "responseSnippet": "{\"logs\":[{\"message\":\"pending\"}]}",
+      "durationMs": 280
+    }
+  ],
+  "domSnapshot": null,
+  "httpLogsSnippet": null,
+  "stderrSnippet": "Error: expect(received).toBe(expected)\n\nExpected: true\nReceived: false\n\n  at assertTraceLogs (expected trace messages [{message:'pending'},{message:'status: denied'}] not all present)\n  at .../playwright/tests/traceability/PAYM-T1931.spec.ts:73",
+  "artifactPaths": {
+    "trace": null,
+    "errorContext": null,
+    "screenshots": [],
+    "video": null
+  },
+  "testStartTimeMs": null,
+  "testEndTimeMs": null,
+  "cloudWatchLogs": [],
+  "suspectedRepo": null,
+  "suspectedFiles": [],
+  "bugLocation": "unknown"
+}

@@ -1,0 +1,266 @@
+import { expect, test } from '@support/fixtures';
+import ConfigMerchant from '@support/api_sup/config_merchant_sup/configMerchant';
+import * as creditCardData from '@support/interfaces/credit_cards';
+import * as processorsConfig from '@support/interfaces/payment_processors';
+import * as refundData from '@support/interfaces/refund';
+import * as userData from '@support/interfaces/user_data';
+import * as apiCallNewman from '@support/newman/apiCallNewman';
+import {
+  StatusBatch,
+  validateBatch,
+  validateBatchFileStatus,
+  validateBatchResult,
+} from '../../../order_validate/validate_batch';
+import { StatusInvoice, validateInvoice } from '../../../order_validate/validate_invoice';
+import { StatusSettlement, validateSettlement } from '../../../order_validate/validate_settlements';
+import {
+  StatusTransaction,
+  TypeTransaction,
+  validateTransaction,
+} from '../../../order_validate/validate_transactions';
+
+import { validateRefundV2 } from '@tests/order_validate/validate_refund_v2';
+import { CreateBody, getFileAccept } from '../elavon_body';
+import { sleep } from '@tests/order_builder/order_functions';
+import { EmailGenerator } from '@support/utils/EmailGenerator';
+
+const configMerchant = new ConfigMerchant();
+
+const purchaseAmount = 4000;
+const processor = processorsConfig.elavonProcessorSettlement;
+
+test.describe('@regression feature to validate with the automated test case', () => {
+  let userAuthToken: string;
+  let merchantId: string;
+  let merchantToken: string;
+  let merchantName: string;
+  let privateKey: string;
+
+  test.beforeAll(async () => {
+    // Configure Merchant
+    const merchant = await configMerchant.basicSetup('US');
+    merchantId = merchant.merchantId;
+    merchantToken = merchant.merchantToken;
+    merchantName = merchant.merchantName;
+    privateKey = merchant.privateKey;
+    // Create Merchant
+    await apiCallNewman.createNetwork(merchantId, merchantToken);
+    // Create Merchant Payment Processor
+    await apiCallNewman.createPaymentProcessor(processor, merchantId, merchantToken);
+  });
+
+  test.fixme(
+    '@PI-T1979 (1.0) Purchase V2 → Refund Total V2 ELAVON (before settlement)',
+    {
+      annotation: { type: 'bug', description: 'PI-6238' },
+      tag: ['@settlement', '@team_payment_integration'],
+    },
+    async ({ paymentService }) => {
+      let orderToken: string;
+      let orderId: string;
+      await test.step('Register User', async () => {
+        const email = EmailGenerator.generateRegisteredUserEmail();
+        const registerUser = await apiCallNewman.registerUser(
+          email,
+          userData.userDataUS,
+          userData.successUser,
+          privateKey,
+          merchantId
+        );
+
+        // Validate User has token
+        expect(registerUser).toHaveProperty('token');
+        userAuthToken = registerUser.token;
+      });
+
+      await test.step('Purchase V2', async () => {
+        const body_purchase_v2 = CreateBody(creditCardData.elavonVisaSuccessfull);
+
+        // Do the Purchase
+        const purchase_v2 = (
+          await paymentService.purchaseV2(privateKey, userAuthToken, body_purchase_v2 as any)
+        ).data as any;
+        expect(purchase_v2).toBeDefined();
+        expect(purchase_v2.order).toBeDefined();
+        expect(purchase_v2.order.currency).toEqual('USD');
+        expect(purchase_v2.order.payment).toBeDefined();
+        expect(purchase_v2.order.payment.data.status).toEqual(StatusInvoice.Processing);
+
+        orderToken = purchase_v2.order_token;
+        orderId = purchase_v2.order.order_id;
+
+        // Validate Invoice
+        const invoice = await validateInvoice(orderToken, orderId, StatusInvoice.Processing);
+        expect(invoice.amount).toEqual(purchaseAmount);
+
+        // Validate Transaction
+        const transaction = await validateTransaction(
+          invoice.id,
+          0,
+          TypeTransaction.Purchase,
+          StatusTransaction.Processing
+        );
+        expect(transaction.amount).toEqual(invoice.amount);
+        expect(transaction.conciliation_id.length).toEqual(15);
+
+        // Validate Settlement
+        const settlement = await validateSettlement(
+          purchase_v2.order_token,
+          0,
+          StatusTransaction.Processing,
+          StatusSettlement.Unsettled
+        );
+        expect(settlement.conciliation_id).toEqual(transaction.conciliation_id);
+        expect(settlement.amount).toEqual(purchaseAmount);
+        expect(settlement.raw_airline_data).not.toBeFalsy();
+      });
+
+      await test.step('Settlement - Purchase', async () => {
+        // Create Settlement Batch
+        const batch = await apiCallNewman.SettlementCreateBath(
+          processor.payment_processor_id,
+          false,
+          merchantId,
+          privateKey
+        );
+        validateBatch(batch, processor.payment_processor_id, StatusBatch.Unprocessed);
+
+        // Validate Settlement File Base
+        const fileKey = `${batch.file_base.folder}/${batch.processor_id}/${batch.file_base.date}/${batch.batch_id}/${batch.file_base.name}`;
+        const statusFileBatch = await apiCallNewman.SettlementFileBase(fileKey, privateKey);
+        validateBatchFileStatus(statusFileBatch, 1, true);
+
+        // Validar estado del batch
+        await sleep(5000);
+        const batchResult = await validateBatchResult(batch.batch_id, StatusBatch.Processing);
+        expect(batchResult.processor_id).toEqual(processor.payment_processor_id);
+
+        // Subir archivo Fake
+        const file64 = getFileAccept(batch.batch_id);
+        await apiCallNewman.UploadFile(batch.processor_name, file64);
+
+        // Validar estado del batch
+        await sleep(5000);
+        const batchResultStatusPurchase = await validateBatchResult(
+          batch.batch_id,
+          StatusBatch.Completed
+        );
+        expect(batchResultStatusPurchase.processor_id).toEqual(processor.payment_processor_id);
+
+        // Validate Invoice
+        const invoice = await validateInvoice(orderToken, orderId, StatusInvoice.Processed);
+
+        // Validar estado de las transacciones en payment
+        await validateTransaction(
+          invoice.id,
+          0,
+          TypeTransaction.Purchase,
+          StatusTransaction.Processed
+        );
+
+        // Validar estado de las transacciones en settlement
+        const settlement = await validateSettlement(
+          invoice.order_token,
+          0,
+          StatusTransaction.Processed,
+          StatusSettlement.Settled
+        );
+        expect(settlement.amount).toEqual(purchaseAmount);
+      });
+
+      await test.step('Refund Total', async () => {
+        const resultRefundV2 = await apiCallNewman.refundOrderV2(
+          refundData.successRefund,
+          privateKey,
+          purchaseAmount,
+          false,
+          { orderToken }
+        );
+
+        validateRefundV2({
+          result: resultRefundV2,
+          transactionAmount: purchaseAmount,
+          transactionCurrency: 'USD',
+          transactionStatus: StatusTransaction.Refunding,
+          indexRefund: 0,
+          skipTransactionId: true,
+        });
+
+        // Validate Invoice
+        const invoice = await validateInvoice(orderToken, orderId, StatusInvoice.Refunding);
+
+        // Validate Transaction
+        const transaction = await validateTransaction(
+          invoice.id,
+          1,
+          TypeTransaction.Refund,
+          StatusTransaction.Refunding
+        );
+        expect(transaction.amount).toEqual(purchaseAmount);
+
+        // Validate Settlement
+        const settlement = await validateSettlement(
+          invoice.order_token,
+          1,
+          StatusTransaction.Refunding,
+          StatusSettlement.Unsettled
+        );
+        expect(settlement.conciliation_id).toEqual(transaction.conciliation_id);
+        expect(settlement.amount).toEqual(purchaseAmount);
+      });
+
+      await test.step('Settlement - Refund', async () => {
+        // Create Settlement Batch
+        const batch = await apiCallNewman.SettlementCreateBath(
+          processor.payment_processor_id,
+          false,
+          merchantId,
+          privateKey
+        );
+        validateBatch(batch, processor.payment_processor_id, StatusBatch.Unprocessed);
+
+        // Validate Settlement File Base
+        const fileKey = `${batch.file_base.folder}/${batch.processor_id}/${batch.file_base.date}/${batch.batch_id}/${batch.file_base.name}`;
+        const statusFileBatch = await apiCallNewman.SettlementFileBase(fileKey, privateKey);
+        validateBatchFileStatus(statusFileBatch, 1, true);
+
+        // Validar estado del batch
+        await sleep(5000);
+        const batchResult = await validateBatchResult(batch.batch_id, StatusBatch.Processing);
+        expect(batchResult.processor_id).toEqual(processor.payment_processor_id);
+
+        // Subir archivo Fake
+        const file64 = getFileAccept(batch.batch_id);
+        await apiCallNewman.UploadFile(batch.processor_name, file64);
+
+        // Validar estado del batch
+        await sleep(5000);
+        const batchResultStatusPurchase = await validateBatchResult(
+          batch.batch_id,
+          StatusBatch.Completed
+        );
+        expect(batchResultStatusPurchase.processor_id).toEqual(processor.payment_processor_id);
+
+        // Validate Invoice
+        const invoice = await validateInvoice(orderToken, orderId, StatusInvoice.Refunded);
+
+        // Validar estado de las transacciones en payment
+        await validateTransaction(
+          invoice.id,
+          1,
+          TypeTransaction.Refund,
+          StatusTransaction.Refunded
+        );
+
+        // Validar estado de las transacciones en settlement
+        const settlement = await validateSettlement(
+          invoice.order_token,
+          1,
+          StatusTransaction.Refunded,
+          StatusSettlement.Settled
+        );
+        expect(settlement.amount).toEqual(purchaseAmount);
+      });
+    }
+  );
+});

@@ -1,0 +1,35 @@
+import {
+  errorVoidOrderRefunded,
+  errorVoidOrderProcessed,
+  errorVoidOrderCaptured,
+  errorVoidOrderPartialCaptured,
+  errorVoidOrderPartialRefunded,
+  errorHigherAmountVoidOrderCaptured,
+  errorLowerAmountVoidOrderCaptured,
+  errorHigherAmountVoidOrderProcessed,
+  errorLowerAmountVoidOrderProcessed,
+  errorVoidOrderProcessedMercadoPago,
+  errorVoidOrderProcessedKushki,
+  errorVoidOrderVoided,
+  errorVoidOrderProcessedGetnet,
+  errorVoidOrderProcessedPayu,
+} from './errorsVoid';
+import { successVoid } from './successVoid';
+
+export {
+  errorVoidOrderRefunded,
+  errorVoidOrderProcessed,
+  errorVoidOrderCaptured,
+  errorVoidOrderPartialCaptured,
+  errorVoidOrderPartialRefunded,
+  errorHigherAmountVoidOrderCaptured,
+  errorLowerAmountVoidOrderCaptured,
+  errorHigherAmountVoidOrderProcessed,
+  errorLowerAmountVoidOrderProcessed,
+  errorVoidOrderProcessedMercadoPago,
+  errorVoidOrderProcessedKushki,
+  errorVoidOrderVoided,
+  errorVoidOrderProcessedGetnet,
+  errorVoidOrderProcessedPayu,
+  successVoid,
+};

@@ -1,0 +1,11 @@
+{
+  "psp": "spreedly",
+  "cards": [
+    {
+      "variableName": "spreedlyVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

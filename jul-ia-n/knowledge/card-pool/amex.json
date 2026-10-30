@@ -1,0 +1,11 @@
+{
+  "psp": "amex",
+  "cards": [
+    {
+      "variableName": "amexSuccessful",
+      "country": null,
+      "brand": "amex",
+      "notes": null
+    }
+  ]
+}

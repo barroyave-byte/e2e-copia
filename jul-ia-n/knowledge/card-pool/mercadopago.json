@@ -1,0 +1,77 @@
+{
+  "psp": "mercadopago",
+  "cards": [
+    {
+      "variableName": "mercadopagoMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "mercadopagoMasterCardSuccessfulNoClear",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "mercadoPagoVisaCardSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "mercadopagoMasterCardSuccessfulCO",
+      "country": "CO",
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "mercadoPagoVisaCardTokenizationSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "mercadopagoMasterCardBrasilSuccessful",
+      "country": "BR",
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "mercadoPagoAmexCardTokenizationSuccessful",
+      "country": null,
+      "brand": "amex",
+      "notes": null
+    },
+    {
+      "variableName": "mercadopagoDebitVisaColombiaSuccessful",
+      "country": "CO",
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "mercadopagoMasterCardSuccessfulCL",
+      "country": "CL",
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "mercadopagoMasterCardSuccessfulCONoClear",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "mercadopagoMasterCardSuccessfulMX",
+      "country": "MX",
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "mercadoPagoVisaCardSuccessfulClear",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

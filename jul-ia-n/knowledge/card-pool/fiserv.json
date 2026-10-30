@@ -1,0 +1,17 @@
+{
+  "psp": "fiserv",
+  "cards": [
+    {
+      "variableName": "fiservMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "fiservARVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

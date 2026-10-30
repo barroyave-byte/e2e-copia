@@ -1,0 +1,112 @@
+name: Update Test Case in Zephyr Scale
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [closed]
+
+jobs:
+  update-test-case:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: npm install axios jq
+
+      # Identify new spec.ts files added to the PR. These are the test cases id
+      - name: Identify added spec files
+        id: identify_spec_files
+        run: |
+          FILES=$(git diff --name-only --diff-filter=A ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} | grep '.spec.ts' || echo "")
+          TEST_CASE_IDS=""
+          if [ -z "$FILES" ]; then
+            echo "No spec files identified. There are no new test cases to process."
+            echo "ids=" >> $GITHUB_ENV
+          else
+            for FILE in $FILES; do
+              TEST_CASE_ID=$(basename $FILE .spec.ts)
+              TEST_CASE_IDS="$TEST_CASE_IDS$TEST_CASE_ID,"
+            done
+            echo "ids=${TEST_CASE_IDS%,}" >> $GITHUB_ENV
+            echo "Identified Test Case IDs: ${TEST_CASE_IDS%,}"
+          fi
+
+      # Determine the labels to be added to the test cases depending on the user who created the PR
+      - name: Determine labels
+        if: env.ids != ''
+        run: |
+          LABELS="e2e_automation_v2"
+          if [ "${{ github.event.pull_request.user.login }}" = "jnovoadeuna" ] || [ "${{ github.event.pull_request.user.login }}" = "luisarmandobr" ] || [ "${{ github.event.pull_request.user.login }}" = "carlosriveeradu" ] || [ "${{ github.event.pull_request.user.login }}" = "deuna-qa-testgen[bot]" ]; then
+            LABELS="$LABELS,e2e_automation"
+          else
+            LABELS="$LABELS,e2e_automation_dev"
+          fi
+          # Convierte la cadena LABELS en un array de bash
+          IFS=',' read -r -a LABELS_ARRAY <<< "$LABELS"
+          # Convierte el array de bash en un array JSON con jq
+          JSON_LABELS=$(jq -n --arg labels "$LABELS" '$labels | split(",")')
+          echo "JSON_LABELS<<EOF" >> $GITHUB_ENV
+          echo "$JSON_LABELS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          echo "the labels are: $JSON_LABELS"
+
+      # Map GitHub username to Jira user ID
+      - name: Map username to Jira user ID
+        if: env.ids != ''
+        id: map_username_to_jira_user_id
+        run: |
+          GH_USERNAME=${{ github.event.pull_request.user.login }}
+          JIRA_USER_ID=$(jq -r --arg username "$GH_USERNAME" '.[$username].user_id_jira' user_id_by_email.json)
+          echo "JIRA_USER_ID=$JIRA_USER_ID" >> $GITHUB_ENV
+
+      # Process each Test Case to update the labels and status using the Zephyr Scale API
+      - name: Process each Test Case
+        if: env.ids != ''
+        run: |
+          declare -A STATUS_ID_MAP=(
+            [QA]=3094861
+            [CHKOUT]=3162898
+            [PLAT]=3162893
+            [ENTP1]=3162969
+            [PI]=4371874
+            [PAYM]=3153159
+            [ADM]=4326143
+            [FRAUD]=3162947
+            [ENT2]=3162991
+            [PF]=8914774
+            [ECOM]=3162942
+            [DATAE]=8225996
+          )
+          IFS=',' read -ra IDS <<< "${{ env.ids }}"
+          LABELS="${{ env.JSON_LABELS }}"
+          JIRA_USER_ID="${{ env.JIRA_USER_ID }}"
+          CURRENT_DATE=$(date +'%Y-%m-%d')
+          # Update every new test case added to the PR  
+          for ID in "${IDS[@]}"; do
+            PROJECT_KEY=$(echo "$ID" | cut -d'-' -f1)
+            echo "Processing Test Case ID: $ID for Project Key: $PROJECT_KEY"
+            STATUS_ID=${STATUS_ID_MAP[$PROJECT_KEY]}
+
+            # Do the GET to obtain the test case information
+            TEST_CASE_DATA=$(curl --location --request GET "https://api.zephyrscale.smartbear.com/v2/testcases/$ID" \
+            --header "Accept: application/json" \
+            --header "Authorization: Bearer ${{ env.ZEPHYR_ACCESS_TOKEN }}")
+
+            # Update body with the labels field, status fields, and additional fields with the new labels and status "Automatizado".
+            # The new labels are appended to the existing ones (without duplicates) instead of replacing them: the PUT replaces
+            # the whole test case, so overwriting the list would erase labels written by other tools (e.g. qa-testgen's tgen-*).
+            UPDATED_TEST_CASE_DATA=$(echo "$TEST_CASE_DATA" | jq --argjson labels "$JSON_LABELS" --arg statusId "$STATUS_ID" --arg automatedBy "$JIRA_USER_ID" --arg automatedDate "$CURRENT_DATE" '(.labels = ((.labels // []) + ($labels - (.labels // [])))) | .status.id = ($statusId | tonumber) | .status.self = ("https://api.zephyrscale.smartbear.com/v2/statuses/" + ($statusId|tostring)) | .customFields += {"AutomatedBy": $automatedBy, "AutomatedDate": $automatedDate}')
+
+            # Do the PUT to update the test case with the new labels, status, and custom fields
+            curl --location --request PUT "https://api.zephyrscale.smartbear.com/v2/testcases/$ID" \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Bearer ${{ env.ZEPHYR_ACCESS_TOKEN }}" \
+            --data "$UPDATED_TEST_CASE_DATA"
+          done
+        env:
+          ZEPHYR_ACCESS_TOKEN: ${{ secrets.ZEPHYR_ACCESS_TOKEN }}

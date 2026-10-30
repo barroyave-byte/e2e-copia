@@ -1,0 +1,30 @@
+[
+  {
+    "projectKey": "${projectKey}",
+    "name": "${testCase.title}",
+    "objective": "${testCase.description}",
+    "precondition": "${testCase.preconditions}",
+    "statusName": "Approved",
+    "steps": {
+      "mode": "OVERWRITE",
+      "items": [
+        {
+          "inline": {
+            "description": "${testCase.steps}",
+            "expectedResult": "${testCase.expectedResult}"
+          }
+        },
+        {
+          "inline": {
+            "description": "${testCase.steps}",
+            "expectedResult": "${testCase.expectedResult}"
+          }
+        }
+      ]
+    },
+    "customFields": {
+      "Created by Windsurf": true
+    },
+    "labels": ["e2e_automation_V2"]
+  }
+]

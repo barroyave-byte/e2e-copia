@@ -1,0 +1,17 @@
+{
+  "psp": "nuvei",
+  "cards": [
+    {
+      "variableName": "nuveiMasterCardSucessfull",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "nuveiVisaSuccessfull",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "mercadopago-refund-pending-operation-409",
+  "title": "MercadoPago — second partial refund fails with 422 DP-6008 (underlying 409 pending operation)",
+  "symptom": "MercadoPago (MP) refund test fails when issuing a SECOND partial refund right after the first one. The refund call returns 422 DP-6008 with an underlying 409 Conflict instead of the expected 200, and the transaction never reaches the expected 'refunded' status (stays 'partial_refunded'). MercadoPago intermittently responds with a pending-operation / 'there is a pending operation' conflict because the previous refund movement has not settled yet on the PSP side when the second refund is fired too quickly. Only observed on MercadoPago refunds, in the step 'The captured transaction is partial refunded'.",
+  "testCaseIds": ["ENTP1-T1067"],
+  "rootCauseCategory": "assertion_mismatch",
+  "tags": ["@mercadopago", "@payment_widget", "@checkout_base", "@team_payment_integration", "refund", "409", "pending-operation", "race-condition"],
+  "recipe": "This is a PSP timing/conflict, not a real product defect and not a test assertion to relax: MercadoPago sometimes returns 409 ('there is a pending operation') when a second refund is executed too quickly, before the prior refund movement settles. Wrap the second refund call so it tolerates and retries on the transient 409 Conflict instead of asserting on the first response. Use the existing retry helper `retryOn409` from `playwright/support/utils/retries.ts` (it retries the apiCall when the error message contains a 409, with a default delay between attempts) around `apiCallNewman.refundOrder(...)`. Equivalently, add a delay before the second refund so MP has time to settle the first movement. Do NOT change the expected final status — it must still reach 'refunded'. This pattern is MercadoPago-specific.",
+  "subagentHint": "serviceInvestigator",
+  "prRefs": ["https://github.com/DUNA-E-Commmerce/e2e-testing/pull/2880"],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": "v23.1",
+  "createdAt": "2026-06-02",
+  "status": "active",
+  "replayableFix": null
+}

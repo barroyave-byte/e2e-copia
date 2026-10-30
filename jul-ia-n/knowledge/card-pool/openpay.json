@@ -1,0 +1,17 @@
+{
+  "psp": "openpay",
+  "cards": [
+    {
+      "variableName": "openpayMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "openpayVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "ssot-connection-form-missing-field",
+  "title": "Admin connections form — field missing/changed due to SSOT config drift (e.g. acquirer_merchant_id)",
+  "symptom": "Admin connection configuration tests fail with a UI element timeout (e.g. 'acquirer_merchant_id' input not visible after ~40s) while editing or creating a PSP connection's 3DS/config info. The expected input field for the connection form never renders, blocking the test from completing the PSP setup step. Tends to affect multiple connection-related test cases at once across different PSPs (MercadoPago, Prosa, generic 3DS) in the same regression.",
+  "testCaseIds": [
+    "ADM-T569",
+    "ADM-T733",
+    "ADM-T740"
+  ],
+  "rootCauseCategory": "ui_element_missing",
+  "tags": [
+    "@admin",
+    "@connections",
+    "@3ds",
+    "ssot"
+  ],
+  "recipe": "Do NOT treat this as a selector bug and do NOT propose a new locator. The admin connections form is driven by SSOT (the system that defines which fields the form renders for a given connection/PSP). When a field is added or removed on the SSOT side, Playwright sees the field as missing (or an unexpected field appears) and times out waiting for it. This is a backend/config issue, not an e2e or selector defect: flag for serviceInvestigator / SSOT owners to confirm the field definition is in sync, and update the SSOT config (add back or align the missing field, e.g. acquirer_merchant_id) for the affected PSP/connection. Only revisit the test/page-object if SSOT is confirmed correct and the e2e selector itself is stale.",
+  "subagentHint": "serviceInvestigator",
+  "replayableFix": null,
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-06-17",
+  "status": "active"
+}

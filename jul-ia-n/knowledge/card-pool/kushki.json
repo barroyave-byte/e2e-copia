@@ -1,0 +1,17 @@
+{
+  "psp": "kushki",
+  "cards": [
+    {
+      "variableName": "kushkiMasterCardExitosa",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "kushkiVisaSuccessfull",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

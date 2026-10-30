@@ -1,0 +1,41 @@
+{
+  "id": "worldpay-invalid-device-id-nmtoken-payload",
+  "title": "Worldpay — DP-4500 decline, device_id NMTOKEN invalid ('e30='), marked known issue per QA",
+  "symptom": "Successful capture with WorldPay using payment widget and capture total order with webhook. Worldpay processor_error: device_id 'e30=' NMTOKEN must be a name token (422); also reported as DP-4500 decline. Worldpay requests are sending an invalid device_id token format, causing NMTOKEN validation failure and the PSP to reject the transaction. Fails at Step 7: Verify payment is authorized successfully. Affects Worldpay capture/refund/webhook flows (total and partial capture, total and partial refund, airline information, REFUNDED webhook) across MX/BR/GT/PE. Recurring across the whole Worldpay suite with the same signature.",
+  "testCaseIds": [
+    "PF-T77",
+    "PF-T78",
+    "PF-T81",
+    "PF-T82",
+    "PF-T95",
+    "PF-T98",
+    "PF-T171",
+    "PI-T1118",
+    "PI-T1165",
+    "PI-T1213"
+  ],
+  "rootCauseCategory": "invalid_payload",
+  "tags": [
+    "@worldpay",
+    "@team_payconnect",
+    "@payment_widget",
+    "DP-4500",
+    "device_id",
+    "NMTOKEN",
+    "capture",
+    "refund",
+    "external-issue"
+  ],
+  "recipe": "Marked as a known issue per QA disposition (QA Review=OK, Root cause QA=External issue) so devs don't re-triage the whole Worldpay suite on every regression. Do NOT auto-propose a diff and do not re-run (this entry skips verify). NOTE for whoever reviews: the evidence points at a DEUNA-side payload bug, not a Worldpay-side decline — device_id is being sent as 'e30=', which is base64 for '{}' (an empty JSON object) instead of a valid NMTOKEN, and the classifier put this in the invalid_payload category. If backend confirms this is our payload construction, re-triage it as a real fix (payloadFixer: populate device_id with a valid NMTOKEN) rather than leaving it marked as external — this disposition was set manually and should be revisited once the device_id serialization is confirmed. This entry stops matching automatically if the failure changes shape (different error code / device_id value).",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-03",
+  "status": "active"
+}

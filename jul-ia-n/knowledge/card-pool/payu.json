@@ -1,0 +1,23 @@
+{
+  "psp": "payu",
+  "cards": [
+    {
+      "variableName": "payUMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "payUVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "payUVisaColombiaSuccessful",
+      "country": "CO",
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

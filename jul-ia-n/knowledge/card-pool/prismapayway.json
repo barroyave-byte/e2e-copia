@@ -1,0 +1,11 @@
+{
+  "psp": "prismapayway",
+  "cards": [
+    {
+      "variableName": "prismaPaywayVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

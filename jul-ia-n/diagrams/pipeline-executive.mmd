@@ -1,0 +1,67 @@
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Inter,Segoe UI,sans-serif','fontSize':'16px'}}}%%
+flowchart TD
+    START(["🔴 Regresión con tests fallidos<br/><i>resultados de Playwright</i>"]):::input
+
+    UNDERSTAND["<b>1 · Entender el fallo</b> 🧠<br/>clasifica cada caso: causa raíz,<br/>equipo dueño, paso que rompió"]:::llm
+
+    MEMORY["<b>2 · Memoria + deduplicación</b><br/>agrupa fallos iguales y reutiliza<br/>soluciones ya conocidas (knowledge base,<br/>preparada una sola vez por corrida)"]:::mem
+
+    KBHIT{"¿ya lo vimos?<br/>match exacto en el KB"}:::decision
+    APPLYKB["<b>fix conocido</b><br/>aplica la solución guardada<br/><b>salta el razonamiento LLM</b>"]:::mem
+    KNOWNISSUE["<b>issue externo conocido</b><br/>marca 'known issue', sin acción<br/><b>salida directa</b> (sin LLM ni verify)"]:::mem
+
+    DECIDE["<b>3 · Orquestador — decide</b> 🧠<br/>¿es bug del test o del servicio?<br/>elige <b>el especialista</b> adecuado<br/>y mide su confianza"]:::llm
+
+    GATE{"¿confianza<br/>suficiente?"}:::decision
+    HUMAN["🙋 Triage humano<br/>(casos dudosos)"]:::human
+
+    subgraph TEAM["4 · Equipo de subagentes (12) — cada uno una especialidad · varios casos en paralelo"]
+        direction LR
+        subgraph G1["Datos y configuración"]
+            direction TB
+            credentialsFixer["credentialsFixer<br/><i>credenciales del PSP/entorno</i>"]:::agent
+            testDataFixer["testDataFixer<br/><i>datos de prueba (montos, emails)</i>"]:::agent
+            cardFixer["cardFixer<br/><i>tarjetas de prueba</i>"]:::agent
+            payloadFixer["payloadFixer<br/><i>payloads de request</i>"]:::agent
+        end
+        subgraph G2["UI y flujos de pago"]
+            direction TB
+            selectorFixer["selectorFixer<br/><i>selectores / locators</i>"]:::agent
+            assertFixer["assertFixer 🔁<br/><i>aserciones (agéntico)</i>"]:::agentic
+            snapshotUpdater["snapshotUpdater<br/><i>regresión visual</i>"]:::agent
+            redirectInvestigator["redirectInvestigator<br/><i>redirecciones externas</i>"]:::agent
+            rateLimitHandler["rateLimitHandler<br/><i>límites de tasa / 429</i>"]:::agent
+        end
+        subgraph G3["Servicio y clasificación"]
+            direction TB
+            serviceInvestigator["serviceInvestigator 🔁<br/><i>bug de backend (agéntico, CloudWatch)</i>"]:::agentic
+            infraMarker["infraMarker<br/><i>problemas de infraestructura</i>"]:::agent
+            humanEscalator["humanEscalator<br/><i>escala a un humano</i>"]:::agent
+        end
+    end
+
+    VERIFY["<b>5 · Verificación automática</b><br/>aplica el fix y corre el test 3×<br/><i>ningún cambio pasa sin re-run verde</i>"]:::verify
+
+    OUT(["✅ Resultado<br/><b>PR</b> · <b>Issue</b> · espera humano<br/>+ reporte (CSV / telemetría)"]):::output
+
+    START --> UNDERSTAND --> MEMORY --> KBHIT
+    KBHIT -->|fix conocido| APPLYKB --> VERIFY
+    KBHIT -->|issue externo| KNOWNISSUE --> OUT
+    KBHIT -->|caso nuevo| DECIDE --> GATE
+    GATE -->|no| HUMAN
+    GATE -->|sí| TEAM
+    TEAM --> VERIFY --> OUT
+
+    classDef input fill:#7f1d1d,stroke:#450a0a,color:#fff,font-weight:bold
+    classDef output fill:#14532d,stroke:#052e16,color:#fff,font-weight:bold
+    classDef llm fill:#fde68a,stroke:#d97706,color:#7c2d12,stroke-width:2px,font-weight:bold
+    classDef mem fill:#fbcfe8,stroke:#db2777,color:#831843
+    classDef decision fill:#e9d5ff,stroke:#7c3aed,color:#4c1d95,font-weight:bold
+    classDef human fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    classDef verify fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,font-weight:bold
+    classDef agent fill:#f0fdfa,stroke:#0d9488,color:#134e4a
+    classDef agentic fill:#ccfbf1,stroke:#0f766e,color:#134e4a,stroke-width:2px,font-weight:bold
+    style TEAM fill:#f8fafc,stroke:#0d9488,stroke-width:2px
+    style G1 fill:#ffffff,stroke:#cbd5e1
+    style G2 fill:#ffffff,stroke:#cbd5e1
+    style G3 fill:#ffffff,stroke:#cbd5e1

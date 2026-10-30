@@ -1,0 +1,16 @@
+{
+  // Incremental `strict` adoption. This config compiles the WHOLE program (TypeScript has no
+  // per-file strictness), but `scripts/typecheck-strict.js` only fails on errors coming from
+  // the paths listed in STRICT_PATHS there. Migrating a directory means fixing its errors and
+  // adding it to that list — never widening it before the errors are gone.
+  //
+  // Baseline measured 2026-08-06: 1993 errors repo-wide under --strict, 908 files.
+  // See the analysis in the framework review for the root-cause breakdown.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    // Its own cache file: sharing the base config's buildinfo would invalidate it on every
+    // alternating run, since the two programs are compiled with different options.
+    "tsBuildInfoFile": "node_modules/.cache/typescript/tsconfig.strict.tsbuildinfo"
+  }
+}

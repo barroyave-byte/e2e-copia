@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>jul-IA-N · Pipeline de auto-heal</title>
+  <style>
+    :root {
+      --llm: #fde68a; --llm-b: #d97706;
+      --embed: #fbcfe8; --embed-b: #db2777;
+      --nollm: #dbeafe; --nollm-b: #2563eb;
+      --decision: #e9d5ff; --decision-b: #7c3aed;
+      --guard: #dcfce7; --guard-b: #16a34a;
+      --skip: #f1f5f9; --skip-b: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: #f8fafc; color: #0f172a;
+    }
+    header {
+      padding: 24px 32px 12px; border-bottom: 1px solid #e2e8f0; background: #fff;
+    }
+    header h1 { margin: 0; font-size: 24px; }
+    header p { margin: 6px 0 0; color: #64748b; font-size: 14px; }
+    .toolbar { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      font-size: 13px; padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1;
+      background: #fff; cursor: pointer; font-weight: 600; color: #334155;
+    }
+    button:hover { background: #f1f5f9; }
+    .legend {
+      display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px; font-size: 13px;
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .chip { width: 16px; height: 16px; border-radius: 4px; border: 2px solid; display: inline-block; }
+    .c-llm { background: var(--llm); border-color: var(--llm-b); }
+    .c-embed { background: var(--embed); border-color: var(--embed-b); }
+    .c-nollm { background: var(--nollm); border-color: var(--nollm-b); }
+    .c-decision { background: var(--decision); border-color: var(--decision-b); }
+    .c-guard { background: var(--guard); border-color: var(--guard-b); }
+    .c-skip { background: var(--skip); border-color: var(--skip-b); }
+    .diagram-wrap { padding: 24px; overflow: auto; }
+    .mermaid { display: flex; justify-content: center; }
+    footer { padding: 8px 32px 24px; color: #94a3b8; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>jul-IA-N · Pipeline de auto-heal de E2E</h1>
+    <p>Recorrido de cada fallo de test: desde <code>test-results.json</code> hasta PR / Issue / CSV. Las cajas marcadas con 🧠 usan un LLM. El KB se prepara <b>una vez</b> y los leaders se procesan en un <b>pool concurrente</b>; <code>verify</code> tiene su propio semáforo.</p>
+    <div class="legend">
+      <span><i class="chip c-llm"></i> Paso con LLM 🧠</span>
+      <span><i class="chip c-embed"></i> Embeddings (OpenAI) 🔎</span>
+      <span><i class="chip c-nollm"></i> Determinístico (sin LLM)</span>
+      <span><i class="chip c-decision"></i> Punto de decisión / gate</span>
+      <span><i class="chip c-guard"></i> Guarda / allowlist</span>
+      <span><i class="chip c-skip"></i> Se omite / corta</span>
+    </div>
+    <div class="toolbar">
+      <button onclick="downloadSvg()">⬇ Descargar SVG</button>
+      <button onclick="window.print()">🖨 Imprimir / PDF</button>
+    </div>
+  </header>
+
+  <div class="diagram-wrap">
+    <pre class="mermaid">
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Inter,Segoe UI,sans-serif','fontSize':'15px'}}}%%
+flowchart TD
+    START(["test-results.json<br/><i>regresión de Playwright</i>"]):::input
+
+    A["<b>A. normalize</b><br/>extrae tests fallidos + texto del reporte<br/><i>steps/normalize.ts</i>"]:::nollm
+    B["<b>B. classify</b> 🧠<br/>rootCauseCategory · teamOwner · failedStep<br/>isCredentialIssue · rootCause<br/><i>1 llamada (max_tokens alto) · chunking opt-in · MODEL_CLASSIFY</i>"]:::llm
+    C["<b>C. dedup</b><br/>agrupa por signature (rootCause)<br/>1 leader / N duplicados<br/><i>steps/dedup.ts</i>"]:::nollm
+
+    PREP["<b>prepare KB · 1 vez</b> 🔎<br/>carga KB + embeddings de entradas<br/>+ batch de query-vectors de todos los leaders<br/><i>una sola vez · sin red/disco por leader · steps/knowledge.ts</i>"]:::embed
+
+    DUP{¿es duplicado?}:::decision
+    INHERIT["hereda la decisión del leader<br/><b>0 LLM</b> → va directo al CSV"]:::skip
+
+    GATE1{"budget cap / PR cap<br/>alcanzado?"}:::decision
+    SKIP1["se registra y se omite<br/>(skipped-budget / skipped-pr-cap)"]:::skip
+
+    subgraph LEADER["POR CADA LEADER · pool concurrente (AI_HEAL_CONCURRENCY, def. 6) — solo los leaders pagan I/O + LLM"]
+        direction TB
+        D["<b>D. enrich</b> (lazy)<br/>trace.zip · error-context · orderId/txId<br/>network calls · DOM · stderr<br/><i>steps/enrich.ts</i>"]:::nollm
+        E["<b>E. investigate</b><br/>adaptador trace-level<br/>(ya NO pega a CloudWatch)<br/><i>steps/investigate.ts</i>"]:::nollm
+        F["<b>F. KB score</b><br/>coseno en memoria vs KB precomputado<br/>→ matches + sección asesora 'prior art'<br/><i>determinístico · sin red ni disco por leader</i>"]:::nollm
+
+        SC{"decideShortCircuit<br/>tier?"}:::decision
+
+        G_KB["<b>G. routing — KB</b><br/>decisión sintetizada del KB<br/>(decisionFromKnowledge)<br/><b>salta el orquestador LLM</b>"]:::nollm
+        G_LLM["<b>G. routing — orquestador</b> 🧠<br/>subagente · bugLocation (e2e/service)<br/>suspectedRepo · confidence · categoryOverride<br/><i>MODEL_REASONING</i>"]:::llm
+        KNOWN["<b>known-issue</b> — issue externo recurrente<br/>escribe CSV (QA Review / Root cause QA)<br/>+ telemetry directo<br/><b>salta orquestador, subagente Y verify</b><br/><i>umbral propio ≥ 0.95 + categoría</i>"]:::skip
+
+        CONF{"confidence ≥ 0.8?"}:::decision
+        SKIP2["skipped-low-confidence<br/>espera triage humano"]:::skip
+
+        SCAPPLY{"tier = apply?<br/>(trae replayableFix)"}:::decision
+        H_APPLY["<b>H. subagente — apply</b><br/>buildShortCircuitProposal<br/>aplica replayableFix<br/><b>salta el subagente LLM</b>"]:::nollm
+
+        SUBKIND{"¿subagente<br/>agéntico?"}:::decision
+        H_AGENT["<b>H. subagente agéntico</b> 🧠🔁<br/>assertFixer · serviceInvestigator<br/>loop multi-turno con tools read-only<br/>read_file · grep · glob · query_cloudwatch"]:::llm
+        H_SINGLE["<b>H. subagente single-shot</b> 🧠<br/>los otros 10 (selectorFixer, cardFixer,<br/>credentialsFixer, payloadFixer, …)<br/>getStructuredOutput"]:::llm
+
+        GUARD["<b>guardas</b><br/>enforceKindRules + validateFileChanges<br/>(allowlist: tests/** · pages/** · interfaces/**)"]:::guard
+        PROP["proposal.kind =<br/><b>diff</b> · <b>issue</b> · <b>enrichment_only</b>"]:::nollm
+    end
+
+    FLAGS{"--dry-run / --no-pr?"}:::decision
+    SKIP3["dry-run / no-pr-flag<br/>(no abre nada)"]:::skip
+
+    ISDIFF{"kind = diff?"}:::decision
+    I["<b>I. verify</b> 🔁<br/>git worktree + corre el test <b>3×</b><br/>veredicto ready-to-pr (≥2 ok) / needs-human<br/><i>semáforo propio (AI_HEAL_VERIFY_CONCURRENCY, def. 2) · red de seguridad final · sin LLM</i>"]:::nollm
+    SKIPV["skip verify<br/>(issue / enrichment_only)"]:::nollm
+
+    J["<b>J. submit</b><br/>PR draft · Issue · nada<br/><i>steps/pr.ts</i>"]:::nollm
+    OUT(["CSV (release.csv) + telemetry/runs/*.json"]):::output
+
+    START --> A --> B --> C --> PREP --> DUP
+    DUP -->|sí| INHERIT --> OUT
+    DUP -->|no| GATE1
+    GATE1 -->|sí| SKIP1 --> OUT
+    GATE1 -->|no| D
+    D --> E --> F --> SC
+    SC -->|route / apply| G_KB --> CONF
+    SC -->|none| G_LLM --> CONF
+    SC -->|known-issue| KNOWN --> OUT
+    CONF -->|no| SKIP2 --> OUT
+    CONF -->|sí| SCAPPLY
+    SCAPPLY -->|sí| H_APPLY --> GUARD
+    SCAPPLY -->|no| SUBKIND
+    SUBKIND -->|sí| H_AGENT --> GUARD
+    SUBKIND -->|no| H_SINGLE --> GUARD
+    GUARD --> PROP --> FLAGS
+    FLAGS -->|sí| SKIP3 --> OUT
+    FLAGS -->|no| ISDIFF
+    ISDIFF -->|sí| I --> J
+    ISDIFF -->|no| SKIPV --> J
+    J --> OUT
+
+    classDef input fill:#1e293b,stroke:#0f172a,color:#fff,font-weight:bold
+    classDef output fill:#1e293b,stroke:#0f172a,color:#fff,font-weight:bold
+    classDef llm fill:#fde68a,stroke:#d97706,color:#7c2d12,stroke-width:2px
+    classDef embed fill:#fbcfe8,stroke:#db2777,color:#831843,stroke-width:2px
+    classDef nollm fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef decision fill:#e9d5ff,stroke:#7c3aed,color:#4c1d95,font-weight:bold
+    classDef skip fill:#f1f5f9,stroke:#94a3b8,color:#475569,stroke-dasharray:4 3
+    classDef guard fill:#dcfce7,stroke:#16a34a,color:#14532d
+    </pre>
+  </div>
+
+  <footer>
+    Generado desde <code>jul-ia-n/PIPELINE.md</code> + código (<code>heal.ts</code>, <code>agents/</code>, <code>steps/</code>). 12 subagentes en total; agénticos hoy: assertFixer y serviceInvestigator; el resto (10) es single-shot.
+  </footer>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', flowchart: { useMaxWidth: false, htmlLabels: true } });
+    window.downloadSvg = () => {
+      const svg = document.querySelector('.mermaid svg');
+      if (!svg) return alert('El diagrama aún no se ha renderizado.');
+      const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'jul-IA-N-pipeline.svg';
+      a.click();
+    };
+  </script>
+</body>
+</html>

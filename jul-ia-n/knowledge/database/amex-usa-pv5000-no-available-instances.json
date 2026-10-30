@@ -1,0 +1,31 @@
+{
+  "id": "amex-usa-pv5000-no-available-instances",
+  "title": "AMEX (USA) — DP-3001 / PV-5000 'no available instances' on authorize, marked known issue per QA",
+  "symptom": "Authorize con AMEX fallido en USA. DP-3001 decline with processor_error PV-5000 'no available instances'. AMEX settlement publishing service has no available instances, causing authorization to fail. Fails at step Authorize order. Recurring AMEX authorize failure in the USA flow with the same signature.",
+  "testCaseIds": [
+    "PI-T2029"
+  ],
+  "rootCauseCategory": "psp_decline",
+  "tags": [
+    "@amex",
+    "@team_payment_integration",
+    "DP-3001",
+    "PV-5000",
+    "no-available-instances",
+    "authorize",
+    "usa",
+    "external-issue"
+  ],
+  "recipe": "Marked as a known issue per QA disposition (QA Review=OK, Root cause QA=External issue) so devs don't re-triage it on every regression. Do NOT auto-propose a diff and do not re-run (this entry skips verify). NOTE for whoever reviews: the signature is 'no available instances' (processor_error PV-5000) on the AMEX settlement publishing service, and the pipeline routed this to serviceInvestigator — that points at a SERVICE AVAILABILITY problem (a service with no running/scaled instances), which may be internal to DEUNA or the integration layer rather than a pure AMEX-side decline. If backend/infra confirms the settlement publishing service is ours, re-triage as an infra/service issue (check owner, instance count/scaling, impact) rather than leaving it marked external — this disposition was set manually and should be revisited. This entry stops matching automatically if the failure changes shape (different processor_error / decline code).",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-03",
+  "status": "active"
+}

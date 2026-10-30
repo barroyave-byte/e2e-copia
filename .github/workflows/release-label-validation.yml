@@ -1,0 +1,41 @@
+name: Release Label Validation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+    branches:
+      - develop
+
+jobs:
+  validate-release-label:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR has a release label (vX.Y)
+        env:
+          LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          echo "PR labels: $LABELS_JSON"
+
+          RELEASE_LABEL=$(echo "$LABELS_JSON" | jq -r '.[]' | grep -E '^v[0-9]+\.[0-9]+$' || true)
+
+          if [ -z "$RELEASE_LABEL" ]; then
+            echo ""
+            echo "❌ VALIDATION FAILED"
+            echo ""
+            echo "This PR must have a release label matching the pattern vX.Y (e.g. v16.1, v17.2)."
+            echo "Release labels are required to identify PRs for cherry-picks."
+            echo ""
+            echo "Add the appropriate release label to this PR and the check will re-run automatically."
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ Release label(s) found:"
+          echo "$RELEASE_LABEL"
+          exit 0

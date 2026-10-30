@@ -1,0 +1,84 @@
+name: PayPal webhook janitor
+
+# PayPal allows 10 webhooks per REST app and DEUNA registers one per payment
+# processor, so each app's 10 slots are a single budget shared by dev, staging,
+# preprod and every local run. The suite uses two apps (wallet, and spb for Pay
+# Later / Venmo); the janitor cleans both. The regression already frees orphans before it starts;
+# this schedule exists so the leak is visible on the day it happens instead of
+# the day a run is blocked by it, and so the slots stay free between regressions.
+#
+# See docs/paypal-webhook-slots.md.
+
+on:
+  schedule:
+    # 11:00 UTC — before the working day in COT/CST, after the nightly runs.
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      delete:
+        description: 'Delete the orphans found (unchecked = report only)'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  janitor:
+    name: Free orphaned PayPal webhook slots
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run janitor
+        id: janitor
+        env:
+          METABASE_USER: ${{ secrets.METABASE_USER }}
+          METABASE_PASSWORD: ${{ secrets.METABASE_PASSWORD }}
+          PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+          PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
+          # A scheduled run has no inputs, and the default there is to clean.
+          DELETE: ${{ github.event_name == 'schedule' || inputs.delete }}
+        run: |
+          set -uo pipefail
+          ARGS=()
+          [ "$DELETE" = "true" ] && ARGS+=(--delete)
+          npm run paypal:janitor -- "${ARGS[@]}" | tee /tmp/paypal-janitor.log
+          # SLOTS_IN_USE is printed after any deletion, so it reflects the state
+          # the next regression will find, not the one this run started from.
+          echo "used=$(grep -oE 'SLOTS_IN_USE=[0-9]+' /tmp/paypal-janitor.log | tail -1 | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Report
+        run: |
+          set -uo pipefail
+          {
+            echo "### PayPal webhook slots"
+            echo ""
+            echo '```'
+            cat /tmp/paypal-janitor.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # After a cleanup the only webhooks left should be the ones in use. Going
+      # over this mark means either a real run is holding many at once or the
+      # janitor could not resolve some of them, and both are worth looking at
+      # before a regression hits the cap.
+      - name: Warn when the app is close to the cap
+        if: always()
+        env:
+          USED: ${{ steps.janitor.outputs.used }}
+        run: |
+          set -uo pipefail
+          if [ -n "${USED:-}" ] && [ "$USED" -ge 7 ]; then
+            echo "::warning::The fullest PayPal app is at ${USED}/10 webhook slots after cleanup (per-app lines in the summary). The next regression may fail with WEBHOOK_NUMBER_LIMIT_EXCEEDED — see docs/paypal-webhook-slots.md."
+          fi

@@ -1,0 +1,31 @@
+{
+  "id": "elavon-partial-capture-missing-second-entry",
+  "title": "Elavon (US) — partial capture does not generate the expected second capture entry, no fix on our side",
+  "symptom": "(1.0) Authorize → Capture Partial V1 → Refund Partial Multiple V2 ELAVON (before settlement). Assertion failed: expected 2 capture records but received 1. Elavon partial capture is not generating the expected second capture entry in the capture list. Capture Partial V1. Confirmed external to DEUNA: Elavon's side, not a code bug.",
+  "testCaseIds": [
+    "PI-T2085"
+  ],
+  "rootCauseCategory": "assertion_mismatch",
+  "tags": [
+    "@elavon",
+    "@team_payment_integration",
+    "settlement",
+    "capture",
+    "partial-capture",
+    "refund",
+    "assertion-mismatch",
+    "external-issue"
+  ],
+  "recipe": "NOT a fix — this is a known, recurring Elavon-side (PSP) failure confirmed external to DEUNA: Elavon does not generate the expected second partial-capture entry, so no code change on our side resolves it. Do NOT propose a diff, do not relax or lower the expected capture-count assertion, do not escalate to serviceInvestigator. Mark the regression row as reviewed via the known-issue disposition (QA Review=OK, Root cause QA=External issue) so devs don't re-triage a case that's already understood. If Elavon starts generating the second capture entry and this stops recurring, this entry will simply stop matching (no manual deprecation needed) — re-open only if Elavon confirms a permanent fix and you want to retire the entry explicitly.",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-02",
+  "status": "active"
+}

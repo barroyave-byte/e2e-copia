@@ -1,0 +1,11 @@
+{
+  "psp": "resortsadvantagecards",
+  "cards": [
+    {
+      "variableName": "resortsAdvantageSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    }
+  ]
+}

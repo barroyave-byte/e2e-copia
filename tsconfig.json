@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    // Type-check only: `tsc` never writes .js/.d.ts output for this project.
+    "noEmit": true,
+    // Reuses the previous run's program state so the pre-commit gate stays fast.
+    // The cache lives inside node_modules/, which is already gitignored.
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/typescript/tsconfig.tsbuildinfo",
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2023", "dom"],
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "paths": {
+      "@pages/*": ["playwright/pages/*"],
+      "@support/*": ["playwright/support/*"],
+      "@tests/*": ["playwright/tests/*"],
+      "@visual/*": ["playwright/visual/*"],
+      "@translations/*": ["playwright/support/translations/*"],
+      "@deuna/test": ["./playwright/support/fixtures/global-fixtures"],
+      "@framework/*": ["playwright/framework/*"]
+      // Nuevos paths acá
+    }
+  },
+  "include": ["**/*.ts"],
+  // node_modules is excluded by default; Cypress reference files and report/artifact folders
+  // must never reach the Playwright compiler.
+  "exclude": [
+    "node_modules",
+    "cypress",
+    "test-results",
+    "playwright-report",
+    "blob-report",
+    "blob-execution-initial",
+    "blob-retry",
+    // promptfoo lives in jul-ia-n/eval's own package (npm run ai-heal:eval:install), so the
+    // root program can't resolve it. That file is checked by jul-ia-n/eval/tsconfig.json.
+    "jul-ia-n/eval/run-eval.ts",
+    "jul-ia-n/eval/node_modules"
+  ]
+}

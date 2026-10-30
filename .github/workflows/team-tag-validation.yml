@@ -1,0 +1,113 @@
+name: Team Tag Validation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - '**'
+    paths:
+      - 'playwright/tests/**/*.spec.ts'
+
+jobs:
+  validate-team-tags:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate team tags and protected tags (@preprod, @smoke)
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          VALIDATION_FAILED=false
+          VALID_TAGS="@team_admin @team_enterprise @team_payment_integration @team_payments_capabilities @team_payconnect @team_platform @team_qa"
+          TAGS_REMOVED=false
+          FORBIDDEN_TAGS_ADDED=false
+          MISSING_TEAM_TAGS=false
+          
+          # Function to check if a tag was removed
+          check_tag_removal() {
+            local file=$1
+            local tag=$2
+            if git show $BASE_SHA:$file | grep -q "$tag" 2>/dev/null && ! grep -q "$tag" "$file" 2>/dev/null; then
+              echo "   ❌ $tag was removed from $file"
+              return 1
+            fi
+            return 0
+          }
+          
+          MODIFIED_FILES=$(git diff --name-only --diff-filter=M $BASE_SHA $HEAD_SHA | grep '\.spec\.ts$' || echo "")
+          NEW_FILES=$(git diff --name-only --diff-filter=A $BASE_SHA $HEAD_SHA | grep '\.spec\.ts$' || echo "")
+          
+          # Check modified files for tag removal
+          if [ -n "$MODIFIED_FILES" ]; then
+            for FILE in $MODIFIED_FILES; do
+              if ! check_tag_removal "$FILE" "@preprod"; then
+                TAGS_REMOVED=true
+              fi
+              if ! check_tag_removal "$FILE" "@smoke"; then
+                TAGS_REMOVED=true
+              fi
+            done
+          fi
+          
+          # Check new files for team tags and forbidden tags
+          if [ -n "$NEW_FILES" ]; then
+            for FILE in $NEW_FILES; do
+              HAS_TEAM_TAG=false
+              for TAG in $VALID_TAGS; do
+                if grep -q "$TAG" "$FILE" 2>/dev/null; then
+                  HAS_TEAM_TAG=true
+                  break
+                fi
+              done
+              
+              if [ "$HAS_TEAM_TAG" = false ]; then
+                echo "   ❌ No team tag found in $FILE"
+                MISSING_TEAM_TAGS=true
+              fi
+              
+              if grep -q '@preprod' "$FILE" 2>/dev/null; then
+                echo "   ❌ Forbidden tag @preprod in $FILE"
+                FORBIDDEN_TAGS_ADDED=true
+              fi
+              if grep -q '@smoke' "$FILE" 2>/dev/null; then
+                echo "   ❌ Forbidden tag @smoke in $FILE"
+                FORBIDDEN_TAGS_ADDED=true
+              fi
+            done
+          fi
+          
+          # Set overall validation flag
+          if [ "$TAGS_REMOVED" = true ] || [ "$FORBIDDEN_TAGS_ADDED" = true ] || [ "$MISSING_TEAM_TAGS" = true ]; then
+            VALIDATION_FAILED=true
+          fi
+          
+          if [ "$VALIDATION_FAILED" = true ]; then
+            echo ""
+            echo "❌ VALIDATION FAILED"
+            echo ""
+            if [ "$TAGS_REMOVED" = true ]; then
+              echo "- Protected tags (@preprod, @smoke) were removed from existing tests"
+            fi
+            if [ "$FORBIDDEN_TAGS_ADDED" = true ]; then
+              echo "- New tests cannot include @preprod or @smoke tags (only QA team)"
+            fi
+            if [ "$MISSING_TEAM_TAGS" = true ]; then
+              echo "- All new tests must include a valid team tag"
+              echo "  Valid tags: $VALID_TAGS"
+            fi
+            echo ""
+            echo "Docs: https://www.notion.so/deuna/Uso-de-tags-en-escenarios-13e74dd6a68780d0b2fbe161052cf2dc"
+            exit 1
+          else
+            echo "✅ All tag validations passed"
+            exit 0
+          fi
+

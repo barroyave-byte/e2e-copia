@@ -1,0 +1,28 @@
+{
+  "id": "nupay-request-race-condition",
+  "title": "NuPAY — race condition: test asserts on a request before it settles",
+  "symptom": "NuPAY payment tests fail intermittently/consistently because Playwright asserts on a network request (purchase/order status) before the request resolves. The expected request/response that the test waits to validate has not completed yet, so the assertion sees a stale or missing value. Affects several NuPAY test cases at once in a regression.",
+  "testCaseIds": [
+    "PI-T1675",
+    "PI-T1716",
+    "PI-T1666",
+    "PI-T1667",
+    "PI-T1668",
+    "PI-T1669"
+  ],
+  "rootCauseCategory": "assertion_mismatch",
+  "tags": [
+    "@nupay",
+    "@checkout",
+    "race-condition"
+  ],
+  "recipe": "This is a test-side race condition, not a product bug. Do NOT relax the assertion. The test must explicitly wait for the relevant request/response to settle before asserting: await the orders status request (waitForResponse on the purchase/order-status endpoint, or the existing assertOrderStatusRequest* helper) and assert on its resolved body, instead of racing the network call. Previous fix updated the affected NuPAY specs to await the request before validating.",
+  "subagentHint": "assertFixer",
+  "prRefs": [
+    "https://github.com/DUNA-E-Commmerce/e2e-testing/pull/2859"
+  ],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": "22.2",
+  "createdAt": "2026-05-31",
+  "status": "active"
+}

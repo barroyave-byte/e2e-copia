@@ -1,0 +1,28 @@
+{
+  "id": "admin-voucher-email-read-no-captured-error",
+  "title": "Admin — Voucher 'orden procesada' email read step fails with no captured error, known non-actionable",
+  "symptom": "Voucher orden procesada. No error message reported for email/voucher read step. Test failed without a captured error, so the voucher email read flow cannot be diagnosed. the user read email automatic. Known, recurring non-actionable failure — no error surfaced on our side.",
+  "testCaseIds": [
+    "ADM-T506"
+  ],
+  "rootCauseCategory": "unknown",
+  "tags": [
+    "@team_admin",
+    "voucher",
+    "email-read",
+    "no-error-captured",
+    "external-issue"
+  ],
+  "recipe": "NOT a fix — this is a known, recurring non-actionable failure in the voucher 'orden procesada' email-read step: the test fails without any captured error message, so there is nothing to diagnose or route on our side. Do NOT propose a diff, do not fabricate an assertion, do not escalate to serviceInvestigator. Mark the regression row as reviewed via the known-issue disposition (QA Review=OK, Root cause QA=External issue) so devs don't re-triage a case that's already understood. If the flow starts surfacing a real error (captured error message, a diagnosable failure), this entry will stop matching and the case will route normally — re-open only to retire the entry explicitly if the email-read flow is fixed.",
+  "subagentHint": null,
+  "replayableFix": null,
+  "knownExternalIssue": {
+    "csvStatus": "OK",
+    "csvIssueType": "External issue"
+  },
+  "prRefs": [],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": null,
+  "createdAt": "2026-07-03",
+  "status": "active"
+}

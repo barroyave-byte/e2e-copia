@@ -1,0 +1,29 @@
+{
+  "psp": "bamboo",
+  "cards": [
+    {
+      "variableName": "bambooMastercadSuccessfull",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "bambooVisaSuccessfull",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "bambooVisaSuccessfullAR",
+      "country": "AR",
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "bambooCreditCardUY",
+      "country": "UY",
+      "brand": null,
+      "notes": "manually triaged 2026-07-10: no explicit success/decline signal in the name, confirmed valid by user"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "psp": "paypalacdc",
+  "cards": [
+    {
+      "variableName": "paypalACDCVisaSucessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "paypalACDCMasterCardSucessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    }
+  ]
+}

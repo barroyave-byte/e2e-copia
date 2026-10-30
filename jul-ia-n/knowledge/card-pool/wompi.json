@@ -1,0 +1,11 @@
+{
+  "psp": "wompi",
+  "cards": [
+    {
+      "variableName": "wompiVisaSuccessfull",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

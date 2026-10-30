@@ -1,0 +1,16 @@
+{
+  "id": "astropay-third-party-summary-locator-non-blocking",
+  "title": "Astropay Offline — 'Summary' assertion on third-party checkout popup is flaky and non-blocking",
+  "symptom": "Astropay Offline AR test fails at the step 'Verify Astropay checkout popup and confirm payment'. expect(locator).toBeVisible() times out (20000ms) for getByText('Summary', { exact: true }); element(s) not found. The failure comes from AstropayPage.assertCheckoutVisible (playwright/pages/explore/forms/astropayPage.ts) → ensureVisible in commonActions.ts, waiting on the 'Summary' title rendered inside the AstroPay (third-party) checkout popup. The popup opens and the payment flow can still continue, but the third-party summary screen content does not load/render the expected 'Summary' text reliably.",
+  "testCaseIds": ["ENTP1-T2558"],
+  "rootCauseCategory": "ui_element_missing",
+  "tags": ["@astropay", "@team_enterprise", "@payment_widget", "@checkout_base", "offline", "third-party-locator", "flaky"],
+  "recipe": "This is a flaky assertion against a THIRD-PARTY (AstroPay) screen, not a DEUNA flow check. DEUNA e2e tests must validate DEUNA flows, not the screens of PSPs/third parties. Asserting the 'Summary' title on the AstroPay popup adds no value and makes the test flaky, and it does NOT block the flow (the popup is captured and clickOnAstropay + the COMPLETED webhook + the admin 'processed' status assertion all proceed). Fix: remove the `await astropayPage.assertCheckoutVisible();` call (line ~60 of playwright/tests/PSP/astropay/offline/ENTP1-T2558.spec.ts) and keep clickOnAstropay + the rest of the flow. GENERAL RULE worth remembering: when a failure is caused by a third-party/PSP locator that does NOT prevent continuing the DEUNA flow, that verification step can be safely removed. Do NOT remove assertions that validate DEUNA-side state (order status, webhooks, admin panel).",
+  "subagentHint": "assertFixer",
+  "prRefs": ["https://github.com/DUNA-E-Commmerce/e2e-testing/pull/2883"],
+  "firstSeenRelease": null,
+  "lastConfirmedRelease": "23.1",
+  "createdAt": "2026-06-02",
+  "status": "active",
+  "replayableFix": null
+}

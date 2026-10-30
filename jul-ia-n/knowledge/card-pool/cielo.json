@@ -1,0 +1,29 @@
+{
+  "psp": "cielo",
+  "cards": [
+    {
+      "variableName": "cieloVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    },
+    {
+      "variableName": "cieloMasterCardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    },
+    {
+      "variableName": "cieloAmexSuccessful",
+      "country": null,
+      "brand": "amex",
+      "notes": null
+    },
+    {
+      "variableName": "cieloDiscoverSuccessful",
+      "country": null,
+      "brand": null,
+      "notes": null
+    }
+  ]
+}

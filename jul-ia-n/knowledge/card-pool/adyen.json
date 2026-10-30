@@ -1,0 +1,11 @@
+{
+  "psp": "adyen",
+  "cards": [
+    {
+      "variableName": "adyenVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}

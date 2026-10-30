@@ -1,0 +1,11 @@
+{
+  "psp": "redsys",
+  "cards": [
+    {
+      "variableName": "redsysMastercardSuccessful",
+      "country": null,
+      "brand": "mastercard",
+      "notes": null
+    }
+  ]
+}

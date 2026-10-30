@@ -1,0 +1,51 @@
+{
+  "_subagent": "assertFixer",
+  "_note": "NuPAY purchase. The status assertion fired before the purchase request settled (race condition): expected 'processing' but the test read 'pending'. This is the pattern captured by the nupay-request-race-condition KB entry. Run with --kb to inject the prior-art recipe (await the request before asserting). Evidence reconstructed from the CSV-style row — not a captured trace.",
+  "testCaseId": "PI-T1666",
+  "testDescription": "Compra con nupay_credit - 1 cuota",
+  "teamOwner": "team_payment_integration",
+  "errorIdentified": "Order status assertion failed: expected 'processing' but got 'pending'.",
+  "rootCause": "Playwright asserted the order status before the purchase request resolved (race condition with the NuPAY purchase request).",
+  "rootCauseCategory": "assertion_mismatch",
+  "isCredentialIssue": false,
+  "failedStep": "It is validated that the order has been processed successfully with status processed",
+  "specFile": "playwright/tests/APM/nupay/purchase/PI-T1666.spec.ts",
+  "specLine": 80,
+  "tags": ["@regression", "@nupay", "@payments_integration", "@team_payment_integration"],
+  "orderId": "ord_br_3d9a71c2e8f4",
+  "transactionId": null,
+  "xRequestIds": ["c4d5e6f7-2222-4333-8444-bcdef0123456"],
+  "networkCalls": [
+    {
+      "url": "https://api.deuna.io/orders/ord_br_3d9a71c2e8f4/purchase",
+      "method": "POST",
+      "status": 200,
+      "xRequestId": "c4d5e6f7-2222-4333-8444-bcdef0123456",
+      "responseSnippet": "{\"order\":{\"status\":\"pending\"}}",
+      "durationMs": 410
+    },
+    {
+      "url": "https://api.deuna.io/orders/ord_br_3d9a71c2e8f4",
+      "method": "GET",
+      "status": 200,
+      "xRequestId": null,
+      "responseSnippet": "{\"order\":{\"status\":\"processing\"}}",
+      "durationMs": 230
+    }
+  ],
+  "domSnapshot": null,
+  "httpLogsSnippet": null,
+  "stderrSnippet": "Error: expect(received).toBe(expected)\n\nExpected: \"processing\"\nReceived: \"pending\"\n\n  at NupayFormPage.assertOrderStatusRequestPurchase\n  at .../playwright/tests/APM/nupay/purchase/PI-T1666.spec.ts:80",
+  "artifactPaths": {
+    "trace": null,
+    "errorContext": null,
+    "screenshots": [],
+    "video": null
+  },
+  "testStartTimeMs": null,
+  "testEndTimeMs": null,
+  "cloudWatchLogs": [],
+  "suspectedRepo": null,
+  "suspectedFiles": [],
+  "bugLocation": "unknown"
+}

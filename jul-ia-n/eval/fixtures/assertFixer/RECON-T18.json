@@ -1,0 +1,43 @@
+{
+  "_subagent": "assertFixer",
+  "_note": "Real case (team_admin). The role select still shows the placeholder 'Selecciona' instead of the newly created role name, so assertSelectedRole(roleName) fails. The assertion is CORRECT — a just-created role must be selectable. Expected behavior: assertFixer reads the spec + adminUserManagement page object, recognizes the expectation is legitimate, and returns kind=enrichment_only (a real propagation/timing bug in the roles dropdown, NOT a stale assertion to rewrite). Evidence (stderr/domSnapshot) reconstructed from the CSV row — not a captured trace.",
+  "testCaseId": "RECON-T18",
+  "testDescription": "Reconciliation Flow Permissions",
+  "teamOwner": "team_admin",
+  "errorIdentified": "Role select still shows 'Selecciona' instead of created role name.",
+  "rootCause": "Newly created reconciliation role was not available/selected in the roles dropdown.",
+  "rootCauseCategory": "assertion_mismatch",
+  "isCredentialIssue": false,
+  "failedStep": "Create a user and assign the role without reconciliation permissions",
+  "specFile": "playwright/tests/teams/admin/roles_and_permissions/RECON-T18.spec.ts",
+  "specLine": 148,
+  "tags": ["@regression", "@admin", "@admin-preprod", "@team_admin"],
+  "orderId": null,
+  "transactionId": null,
+  "xRequestIds": [],
+  "networkCalls": [
+    {
+      "url": "https://admin-api.deuna.io/roles?merchant_id=mer_co_001",
+      "method": "GET",
+      "status": 200,
+      "xRequestId": null,
+      "responseSnippet": "{\"roles\":[{\"id\":\"role_merchant_admin\",\"name\":\"merchant_admin\"}]}",
+      "durationMs": 310
+    }
+  ],
+  "domSnapshot": "dialog \"Crear usuario\"\n  group \"Rol o permisos\"\n    combobox \"Rol\": \"Selecciona\"\n      option \"merchant_admin\"\n      option \"viewer\"\n  button \"Siguiente\" [disabled]",
+  "httpLogsSnippet": null,
+  "stderrSnippet": "Error: expect(received).toHaveText(expected)\n\nExpected string: \"Recon Role a1b2c\"\nReceived string: \"Selecciona\"\n\n  at AdminUserManagementPage.assertSelectedRole\n  at .../playwright/tests/teams/admin/roles_and_permissions/RECON-T18.spec.ts:148",
+  "artifactPaths": {
+    "trace": null,
+    "errorContext": null,
+    "screenshots": [],
+    "video": null
+  },
+  "testStartTimeMs": null,
+  "testEndTimeMs": null,
+  "cloudWatchLogs": [],
+  "suspectedRepo": null,
+  "suspectedFiles": [],
+  "bugLocation": "unknown"
+}

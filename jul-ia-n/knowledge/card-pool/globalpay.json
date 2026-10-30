@@ -1,0 +1,11 @@
+{
+  "psp": "globalpay",
+  "cards": [
+    {
+      "variableName": "globalpayVisaSuccessful",
+      "country": null,
+      "brand": "visa",
+      "notes": null
+    }
+  ]
+}
