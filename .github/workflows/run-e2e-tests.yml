@@ -90,10 +90,12 @@ jobs:
         continue-on-error: true
         env:
           CI: "true"
+          PW_ARGS: ${{ vars.IHUB_PLAYWRIGHT_ARGS || '--project=chromium' }}
         run: |
-          # Zephyr ids are tags (@PF-T127): match any of the requested ones.
-          grep_re="@($(echo "$TEST_IDS" | tr ',' '|'))\$"
-          npx playwright test --project=chromium --grep "$grep_re" --reporter=list,json
+          # Zephyr ids appear in the title (@PF-T127 ...): match any requested id as a whole word.
+          grep_re="(^|\\s)@($(echo "$TEST_IDS" | tr ',' '|'))(\\s|\$)"
+          # PW_ARGS comes from the repo variable IHUB_PLAYWRIGHT_ARGS (trusted, set by repo admins).
+          npx playwright test $PW_ARGS --grep "$grep_re" --reporter=list,json
         # NOTE: how the suite picks the target environment (NODE_ENV / base URLs) is still to be
         # confirmed against playwright.config.ts; IHUB_ENVIRONMENT is exported for credentials.ts.
 
