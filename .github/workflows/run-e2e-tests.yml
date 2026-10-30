@@ -85,6 +85,15 @@ jobs:
           jq -r '.credentials[]? | .[]?' "$file" | while IFS= read -r v; do [ -n "$v" ] && echo "::add-mask::$v"; done
           echo "IHUB_CREDENTIALS_FILE=$file" >> "$GITHUB_ENV"
 
+      # TEMPORARY DEBUG - remove once the flow is verified.
+      # Shows the shape of what arrived (ids, key names, value lengths). Values stay masked on purpose.
+      - name: DEBUG credentials received
+        run: |
+          echo "file size (bytes): $(wc -c < "$IHUB_CREDENTIALS_FILE")"
+          echo "top-level keys: $(jq -c 'keys' "$IHUB_CREDENTIALS_FILE")"
+          echo "test ids with credentials: $(jq -c '.credentials | keys' "$IHUB_CREDENTIALS_FILE")"
+          jq -c '.credentials | to_entries[] | {test: .key, keys: (.value | keys), value_lengths: (.value | map_values(tostring | length))}' "$IHUB_CREDENTIALS_FILE"
+
       - name: Run tests
         id: tests
         continue-on-error: true
@@ -94,6 +103,11 @@ jobs:
         run: |
           # Zephyr ids appear in the title (@PF-T127 ...): match any requested id as a whole word.
           grep_re="(^|\\s)@($(echo "$TEST_IDS" | tr ',' '|'))(\\s|\$)"
+          # TEMPORARY DEBUG - remove once the flow is verified.
+          echo "PW_ARGS=[$PW_ARGS]"
+          echo "grep_re=[$grep_re]"
+          echo "credentials file exists: $([ -f "$IHUB_CREDENTIALS_FILE" ] && echo yes || echo no)"
+          npx playwright test $PW_ARGS --grep "$grep_re" --list
           # PW_ARGS comes from the repo variable IHUB_PLAYWRIGHT_ARGS (trusted, set by repo admins).
           npx playwright test $PW_ARGS --grep "$grep_re" --reporter=list,json
         # NOTE: how the suite picks the target environment (NODE_ENV / base URLs) is still to be
