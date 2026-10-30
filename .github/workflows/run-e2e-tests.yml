@@ -103,6 +103,8 @@ jobs:
           CI: "true"
           PW_ARGS: ${{ vars.IHUB_PLAYWRIGHT_ARGS || '--project=chromium' }}
           PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
+          PLAYWRIGHT_HTML_REPORT: playwright-report/html
+          PLAYWRIGHT_HTML_OPEN: never
         run: |
           mkdir -p playwright-report
           # Zephyr ids appear in the title (@PF-T127 ...): match any requested id as a whole word.
@@ -113,7 +115,7 @@ jobs:
           echo "credentials file exists: $([ -f "$IHUB_CREDENTIALS_FILE" ] && echo yes || echo no)"
           npx playwright test $PW_ARGS --grep "$grep_re" --list
           # PW_ARGS comes from the repo variable IHUB_PLAYWRIGHT_ARGS (trusted, set by repo admins).
-          npx playwright test $PW_ARGS --grep "$grep_re" --reporter=list,json
+          npx playwright test $PW_ARGS --grep "$grep_re" --reporter=list,json,html
         # NOTE: how the suite picks the target environment (NODE_ENV / base URLs) is still to be
         # confirmed against playwright.config.ts; IHUB_ENVIRONMENT is exported for credentials.ts.
 
@@ -122,6 +124,7 @@ jobs:
         run: rm -f "${IHUB_CREDENTIALS_FILE:-/dev/null}"
 
       - name: Upload report
+        id: upload
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -154,8 +157,9 @@ jobs:
         if: always() && env.CALLBACK_URL != ''
         run: |
           jq -n --arg outcome "${{ steps.tests.outcome }}" --arg github_run "${{ github.run_id }}" \
+            --arg report_url "${{ steps.upload.outputs.artifact-url }}" \
             --slurpfile tests "$IHUB_RESULTS_FILE" \
-            '{outcome:$outcome, github_run_id:$github_run, tests:$tests[0]}' > "${RUNNER_TEMP}/ihub-callback.json"
+            '{outcome:$outcome, github_run_id:$github_run, report_url:$report_url, tests:$tests[0]}' > "${RUNNER_TEMP}/ihub-callback.json"
           echo "callback payload (no credential values):"; cat "${RUNNER_TEMP}/ihub-callback.json"
           code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H "Content-Type: application/json" \
                   -H "X-Run-Token: ${RUN_TOKEN}" --data @"${RUNNER_TEMP}/ihub-callback.json" "$CALLBACK_URL") || code="curl-error"

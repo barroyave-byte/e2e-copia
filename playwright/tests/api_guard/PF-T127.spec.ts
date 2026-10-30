@@ -17,7 +17,7 @@ test(
     const keys = Object.keys(mine).sort();
     const fingerprint = crypto.createHash('sha256').update(JSON.stringify(mine)).digest('hex').slice(0, 8);
 
-    console.log(`[ihub] test=${testId} credential_keys=${JSON.stringify(keys)} fingerprint=${fingerprint} value=${mine}`);
+    console.log(`[ihub] test=${testId} credential_keys=${JSON.stringify(keys)} fingerprint=${fingerprint} value=${JSON.stringify(mine)}`);
     test.info().annotations.push({ type: 'credentials-fingerprint', description: fingerprint });
 
     expect(keys.length).toBeGreaterThan(0);
