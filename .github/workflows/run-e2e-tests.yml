@@ -81,6 +81,8 @@ jobs:
           umask 077
           code=$(curl -sS -o "$file" -w '%{http_code}' -H "X-Run-Token: ${RUN_TOKEN}" "$CREDENTIALS_URL")
           [ "$code" = "200" ] || { echo "credentials fetch failed (HTTP $code)"; rm -f "$file"; exit 1; }
+          jq -e '.credentials | type == "object"' "$file" >/dev/null 2>&1 \
+            || { echo "credentials response is not JSON with a .credentials object (HTTP 200, $(wc -c < "$file") bytes)"; rm -f "$file"; exit 1; }
           # Mask every credential value so it never shows up in logs.
           jq -r '.credentials[]? | .[]?' "$file" | while IFS= read -r v; do [ -n "$v" ] && echo "::add-mask::$v"; done
           echo "IHUB_CREDENTIALS_FILE=$file" >> "$GITHUB_ENV"
@@ -100,7 +102,9 @@ jobs:
         env:
           CI: "true"
           PW_ARGS: ${{ vars.IHUB_PLAYWRIGHT_ARGS || '--project=chromium' }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
         run: |
+          mkdir -p playwright-report
           # Zephyr ids appear in the title (@PF-T127 ...): match any requested id as a whole word.
           grep_re="(^|\\s)@($(echo "$TEST_IDS" | tr ',' '|'))(\\s|\$)"
           # TEMPORARY DEBUG - remove once the flow is verified.
@@ -126,14 +130,36 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Build results summary
+        if: always()
+        run: |
+          out="${RUNNER_TEMP}/ihub-results.json"
+          if [ -f playwright-report/results.json ]; then
+            jq -c '[.. | objects | select(has("specs")) | .specs[] | {
+                id: ((.title | capture("^@(?<id>[A-Za-z0-9]+-T[0-9]+)")? // {id:""}).id),
+                title: .title,
+                status: (.tests[0].results | last | .status),
+                duration_ms: (.tests[0].results | last | .duration),
+                credentials_fingerprint: ((.tests[0].annotations // []) | map(select(.type=="credentials-fingerprint")) | (.[0].description // ""))
+              }]' playwright-report/results.json > "$out"
+          else
+            echo '[]' > "$out"
+          fi
+          echo "IHUB_RESULTS_FILE=$out" >> "$GITHUB_ENV"
+          # TEMPORARY DEBUG - remove once the flow is verified. Fingerprints are short digests, never values.
+          echo "per-test results:"; jq -c '.[]' "$out"
+          echo "tests: $(jq 'length' "$out"), distinct credential fingerprints: $(jq '[.[].credentials_fingerprint | select(. != "")] | unique | length' "$out")"
+
       - name: Send summary (optional)
         if: always() && env.CALLBACK_URL != ''
         run: |
-          jq -n --arg run_id "$RUN_ID" --arg outcome "${{ steps.tests.outcome }}" \
-            --arg github_run "${{ github.run_id }}" \
-            '{run_id:$run_id, outcome:$outcome, github_run_id:$github_run}' \
-          | curl -sS -X POST -H "Content-Type: application/json" -H "X-Run-Token: ${RUN_TOKEN}" \
-              --data @- "$CALLBACK_URL" || echo "callback failed (ignored)"
+          jq -n --arg outcome "${{ steps.tests.outcome }}" --arg github_run "${{ github.run_id }}" \
+            --slurpfile tests "$IHUB_RESULTS_FILE" \
+            '{outcome:$outcome, github_run_id:$github_run, tests:$tests[0]}' > "${RUNNER_TEMP}/ihub-callback.json"
+          echo "callback payload (no credential values):"; cat "${RUNNER_TEMP}/ihub-callback.json"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H "Content-Type: application/json" \
+                  -H "X-Run-Token: ${RUN_TOKEN}" --data @"${RUNNER_TEMP}/ihub-callback.json" "$CALLBACK_URL") || code="curl-error"
+          echo "callback HTTP status: $code"
 
       - name: Fail the run if tests failed
         if: steps.tests.outcome == 'failure'
