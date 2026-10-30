@@ -1,0 +1,50 @@
+name: Update test manifest
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'playwright/tests/**/*.spec.ts'
+      - 'scripts/generate-manifest.js'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      # Lists the tests to a file to avoid ENOBUFS on large suites.
+      - name: List tests to file
+        run: npx playwright test --list --reporter=json --project=chromium 2>/dev/null > "${RUNNER_TEMP}/pw-list.json"
+
+      - name: Generate manifest
+        run: node scripts/generate-manifest.js "${RUNNER_TEMP}/pw-list.json"
+
+      - name: Validate manifest
+        run: |
+          node -e "
+            const m = require('./test-manifest.json');
+            const globals = m.tests.filter(t => t.ihub_tag === '@i-hub-global').length;
+            console.log('Tests in manifest:', m.tests.length, '(global:', globals + ', specific:', m.tests.length - globals + ')');
+            if (!m.tests.length) { console.error('ERROR: empty manifest'); process.exit(1); }
+          "
+
+      - name: Commit manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add test-manifest.json
+          git diff --staged --quiet && { echo "manifest unchanged"; exit 0; }
+          git commit -m "chore: update test-manifest.json [skip ci]"
+          git push
